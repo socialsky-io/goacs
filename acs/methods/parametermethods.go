@@ -65,8 +65,10 @@ func (pd *ParameterDecisions) GetParameterValuesResponseParser() {
 		//Get modified parameters
 		//Check for AddObject instances
 		diffParameters := pd.ReqRes.Session.CPE.GetChangedParametersToWrite(&dbParameters)
-		pd.ReqRes.Session.CPE.ParametersQueue = diffParameters
-		pd.ReqRes.Session.NextJob = acs.JOB_SENDPARAMETERS
+		if len(diffParameters) > 0 {
+			pd.ReqRes.Session.CPE.ParametersQueue = diffParameters
+			pd.ReqRes.Session.NextJob = acs.JOB_SENDPARAMETERS
+		}
 	}
 
 	//log.Println(pd.ReqRes.Session.CPE.ParameterValues)
@@ -81,8 +83,8 @@ func (pd *ParameterDecisions) SetParameterValuesResponse() {
 
 	//TODO: Check why some parameters are writeable, but cpe returns fault on it
 	if len(pd.ReqRes.Session.CPE.ParametersQueue) > 0 {
+		log.Println("SPV")
 		var response = pd.ReqRes.Envelope.SetParameterValues(pd.ReqRes.Session.CPE.PopParametersQueue())
-		log.Println(response)
 		_, _ = fmt.Fprint(pd.ReqRes.Response, response)
 		pd.ReqRes.Session.PrevReqType = acsxml.SPVResp
 	}

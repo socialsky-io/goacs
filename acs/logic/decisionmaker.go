@@ -11,6 +11,7 @@ import (
 	"goacs/repository"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 )
 
@@ -45,11 +46,15 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 		informDecision.AcsRequest()
 
 	case acsxml.EMPTY:
+		log.Println("EMPTY RESPONSE")
 		if session.PrevReqType == acsxml.INFORM {
 			if session.IsNew == false && session.IsBoot == true {
 				fmt.Println("GPN REQ")
 				parameterDecisions := methods.ParameterDecisions{&reqRes}
 				parameterDecisions.ParameterNamesRequest(true)
+			} else {
+				//Process tasks if any exist
+
 			}
 		}
 
