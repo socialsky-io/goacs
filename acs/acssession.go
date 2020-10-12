@@ -20,14 +20,16 @@ const (
 )
 
 type ACSSession struct {
-	Id          string
-	IsNew       bool
-	IsBoot      bool
-	PrevReqType string
-	CreatedAt   time.Time
-	CPE         cpe.CPE
-	NextJob     int
-	Tasks       []tasks.Task
+	Id                string
+	IsNew             bool
+	IsBoot            bool
+	IsBootstrap       bool
+	ReadAllParameters bool
+	PrevReqType       string
+	CreatedAt         time.Time
+	CPE               cpe.CPE
+	NextJob           int
+	Tasks             []tasks.Task
 }
 
 var lock = sync.RWMutex{}
@@ -107,18 +109,22 @@ func removeOldSessions() {
 	}
 }
 
-func (session *ACSSession) FillCPEFromInform(inform types.Inform) {
-	session.CPE = cpe.CPE{
-		Manufacturer:    inform.DeviceId.Manufacturer,
-		SerialNumber:    inform.DeviceId.SerialNumber,
-		OUI:             inform.DeviceId.OUI,
-		HardwareVersion: "1.0",
-	}
-	session.CPE.AddParameterValues(inform.ParameterList)
-	session.CPE.SetRoot(cpe.DetermineDeviceTreeRootPath(session.CPE.ParameterValues))
+func (session *ACSSession) FillCPESessionFromInform(inform types.Inform) {
+	session.CPE.SetRoot(cpe.DetermineDeviceTreeRootPath(inform.ParameterList))
+	session.CPE.SerialNumber = inform.DeviceId.SerialNumber
+	session.IsBoot = inform.IsBootEvent()
+	session.IsBootstrap = inform.IsBootstrapEvent()
+	session.FillCPESessionBaseInfo(inform.ParameterList)
+	fmt.Println(session.CPE)
+}
+
+func (session *ACSSession) FillCPESessionBaseInfo(parameters []types.ParameterValueStruct) {
+	session.CPE.AddParameterValues(parameters)
 	session.CPE.ConnectionRequestUrl, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.ConnectionRequestURL")
 	session.CPE.ConnectionRequestUser, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.Username")
 	session.CPE.ConnectionRequestUser, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.Password")
-	session.IsBoot = inform.IsBootEvent()
-	fmt.Println(session.CPE)
+	session.CPE.HardwareVersion, _ = session.CPE.GetParameterValue(session.CPE.Root + ".DeviceInfo.HardwareVersion")
+	session.CPE.SoftwareVersion, _ = session.CPE.GetParameterValue(session.CPE.Root + ".DeviceInfo.SoftwareVersion")
+	ipAddrStr, _ := session.CPE.GetParameterValue(session.CPE.Root + "..WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress")
+	_ = session.CPE.IpAddress.Scan(ipAddrStr)
 }

@@ -109,16 +109,18 @@ func (r *CPERepository) Create(cpe *cpe.CPE) (bool, error) {
 	}
 
 	cpe.UUID = uuidInstance.String()
+	cpe.NewInACS = true
 
 	return true, nil
 }
 
-func (r *CPERepository) UpdateOrCreate(cpe *cpe.CPE) (result bool, err error) {
+func (r *CPERepository) UpdateOrCreate(cpe *cpe.CPE) (result bool, cpeExist bool, err error) {
 
 	dbCPE, _ := r.FindBySerial(cpe.SerialNumber)
 
 	if dbCPE == nil {
 		result, err = r.Create(cpe)
+		cpeExist = false
 	} else {
 		fmt.Println("Updating CPE")
 		stmt, _ := r.db.Prepare(`UPDATE cpe SET 
@@ -143,15 +145,16 @@ func (r *CPERepository) UpdateOrCreate(cpe *cpe.CPE) (result bool, err error) {
 
 		if err != nil {
 			log.Println("error while updatng cpe " + err.Error())
-			return false, repository.ErrUpdating
+			return false, false, repository.ErrUpdating
 		}
 
 		result = true
 		err = nil
+		cpeExist = true
 
 	}
 
-	return result, err
+	return
 }
 
 func (r *CPERepository) FindParameter(cpe *cpe.CPE, parameterKey string) (*types.ParameterValueStruct, error) {

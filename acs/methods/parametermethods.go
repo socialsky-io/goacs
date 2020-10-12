@@ -54,7 +54,9 @@ func (pd *ParameterDecisions) GetParameterValuesResponseParser() {
 	log.Println("GetParameterValuesResponseParser")
 
 	pd.ReqRes.Session.CPE.AddParameterValues(gpvr.ParameterList)
+	pd.ReqRes.Session.FillCPESessionBaseInfo(gpvr.ParameterList)
 	cpeRepository := mysql.NewCPERepository(repository.GetConnection())
+	_, _, _ = cpeRepository.UpdateOrCreate(&pd.ReqRes.Session.CPE)
 
 	dbParameters, err := cpeRepository.GetCPEParameters(&pd.ReqRes.Session.CPE)
 	if err != nil {

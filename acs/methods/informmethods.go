@@ -21,10 +21,11 @@ func (InformDecision *InformDecision) CpeResponseParser() {
 	var inform acsxml.Inform
 	_ = xml.Unmarshal(InformDecision.ReqRes.Body, &inform)
 	fmt.Println("BOOT", inform.IsBootEvent())
-	InformDecision.ReqRes.Session.FillCPEFromInform(inform)
+	InformDecision.ReqRes.Session.FillCPESessionFromInform(inform)
 	tasksRepository := mysql.NewTasksRepository(InformDecision.ReqRes.DBConnection)
 	InformDecision.ReqRes.Session.Tasks = tasksRepository.GetTasksForCPE(InformDecision.ReqRes.Session.CPE.UUID)
 	cpeRepository := mysql.NewCPERepository(InformDecision.ReqRes.DBConnection)
-	_, _ = cpeRepository.UpdateOrCreate(&InformDecision.ReqRes.Session.CPE)
+	_, cpeExist, _ := cpeRepository.UpdateOrCreate(&InformDecision.ReqRes.Session.CPE)
+	InformDecision.ReqRes.Session.ReadAllParameters = cpeExist
 	_, _ = cpeRepository.SaveParameters(&InformDecision.ReqRes.Session.CPE)
 }

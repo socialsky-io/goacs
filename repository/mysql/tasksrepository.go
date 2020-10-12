@@ -17,7 +17,21 @@ func NewTasksRepository(connection *sqlx.DB) TasksRepository {
 
 func (t *TasksRepository) GetTasksForCPE(cpe_uuid string) []tasks.Task {
 	var cpeTasks []tasks.Task
-	_ = t.db.Select(&cpeTasks, "SELECT * FROM tasks WHERE cpe_uuid=? AND done_at is null AND not_before >= now()", cpe_uuid)
+	_ = t.db.Select(&cpeTasks, "SELECT * FROM tasks WHERE cpe_uuid=? AND done_at is null AND not_before <= now()", cpe_uuid)
+
+	return cpeTasks
+}
+
+func (t *TasksRepository) GetTasksForCPEWithoutDateCheck(cpe_uuid string) []tasks.Task {
+	var cpeTasks []tasks.Task
+	_ = t.db.Select(&cpeTasks, "SELECT * FROM tasks WHERE cpe_uuid=? AND done_at is null", cpe_uuid)
+
+	return cpeTasks
+}
+
+func (t *TasksRepository) GetAllTasksForCPE(cpe_uuid string) []tasks.Task {
+	var cpeTasks []tasks.Task
+	_ = t.db.Select(&cpeTasks, "SELECT * FROM tasks WHERE cpe_uuid=?", cpe_uuid)
 
 	return cpeTasks
 }

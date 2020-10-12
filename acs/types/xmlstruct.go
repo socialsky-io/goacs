@@ -130,10 +130,19 @@ func (inform *Inform) IsEvent(event string) bool {
 	return false
 }
 
+func (inform *Inform) IsBootstrapEvent() bool {
+	for idx := range inform.Events {
+		if inform.Events[idx].EventCode == "0 BOOTSTRAP" {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (inform *Inform) IsBootEvent() bool {
 	for idx := range inform.Events {
-		if inform.Events[idx].EventCode == "0 BOOTSTRAP" ||
-			inform.Events[idx].EventCode == "1 BOOT" {
+		if inform.Events[idx].EventCode == "1 BOOT" {
 			return true
 		}
 	}

@@ -8,7 +8,9 @@ import (
 	"goacs/acs/methods"
 	acsxml "goacs/acs/types"
 	"goacs/lib"
+	"goacs/models/tasks"
 	"goacs/repository"
+	"goacs/repository/mysql"
 	"io"
 	"io/ioutil"
 	"log"
@@ -48,13 +50,10 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 	case acsxml.EMPTY:
 		log.Println("EMPTY RESPONSE")
 		if session.PrevReqType == acsxml.INFORM {
-			if session.IsNew == false && session.IsBoot == true {
+			if session.IsNew == false && session.ReadAllParameters == false {
 				fmt.Println("GPN REQ")
 				parameterDecisions := methods.ParameterDecisions{&reqRes}
 				parameterDecisions.ParameterNamesRequest(true)
-			} else {
-				//Process tasks if any exist
-
 			}
 		}
 
@@ -62,16 +61,16 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 		parameterDecisions := methods.ParameterDecisions{ReqRes: &reqRes}
 		parameterDecisions.CpeParameterNamesResponseParser()
 
-		fmt.Println("GPV REQ")
-
 		//parameterDecisions.GetParameterValuesRequest(reqRes.Session.CPE.ParametersInfo)
-		parameterDecisions.GetParameterValuesRequest([]acsxml.ParameterInfo{
-			{
-				Name:     session.CPE.Root + ".",
-				Writable: "0",
-			},
-		})
-
+		if reqRes.Session.CPE.NewInACS {
+			// CPE is new in acs (not exist)
+			parameterDecisions.GetParameterValuesRequest([]acsxml.ParameterInfo{
+				{
+					Name:     session.CPE.Root + ".",
+					Writable: "0",
+				},
+			})
+		}
 	case acsxml.GPVResp:
 		parameterDecisions := methods.ParameterDecisions{ReqRes: &reqRes}
 		parameterDecisions.GetParameterValuesResponseParser()
@@ -92,6 +91,7 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 	}
 
 	ProcessSessionJobs(&reqRes)
+	ProcessTasks(&reqRes, reqType)
 
 }
 
@@ -100,6 +100,19 @@ func ProcessSessionJobs(reqRes *acshttp.ReqRes) {
 	case acs.JOB_SENDPARAMETERS:
 		parameterDecisions := methods.ParameterDecisions{ReqRes: reqRes}
 		parameterDecisions.SetParameterValuesResponse()
+	}
+}
+
+func ProcessTasks(reqRes *acshttp.ReqRes, event string) {
+	tasksRepository := mysql.NewTasksRepository(reqRes.DBConnection)
+	cpeTasks := tasksRepository.GetTasksForCPE(reqRes.Session.CPE.UUID)
+
+	if len(cpeTasks) > 0 {
+		filteredTasks := tasks.FilterTasksByEvent(event, cpeTasks)
+		for _, cpeTask := range filteredTasks {
+			log.Println(" cpeTask")
+			log.Println(cpeTask)
+		}
 	}
 }
 

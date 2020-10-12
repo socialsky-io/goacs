@@ -48,6 +48,7 @@ type CPE struct {
 	ParametersQueue           []types.ParameterValueStruct
 	Fault                     types.Fault
 	UpdatedAt                 time.Time `json:"updated_at" db:"updated_at"`
+	NewInACS                  bool
 }
 
 func (cpe *CPE) AddParameterInfo(parameter types.ParameterInfo) {
