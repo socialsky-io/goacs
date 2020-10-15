@@ -6,6 +6,7 @@ import (
 	"goacs/acs"
 	acshttp "goacs/acs/http"
 	"goacs/acs/methods"
+	"goacs/acs/scripts"
 	acsxml "goacs/acs/types"
 	"goacs/lib"
 	"goacs/models/tasks"
@@ -106,8 +107,19 @@ func ProcessSessionJobs(reqRes *acshttp.ReqRes) {
 func ProcessTasks(reqRes *acshttp.ReqRes, event string) {
 	tasksRepository := mysql.NewTasksRepository(reqRes.DBConnection)
 	cpeTasks := tasksRepository.GetTasksForCPE(reqRes.Session.CPE.UUID)
+	log.Println("TASKS LEN", len(cpeTasks))
 
 	if len(cpeTasks) > 0 {
+		scriptEngine := scripts.NewScriptEngine(reqRes.Session)
+		script := `
+SetParameter("SYSTEM.X_GOACS.FromScript", "OK")
+`
+		result, err := scriptEngine.Execute(script)
+		log.Println(result, err)
+		value, err := reqRes.Session.CPE.GetParameterValue("SYSTEM.X_GOACS.FromScript")
+		log.Println("READ PARAMETER")
+		log.Println(value)
+
 		filteredTasks := tasks.FilterTasksByEvent(event, cpeTasks)
 		for _, cpeTask := range filteredTasks {
 			log.Println(" cpeTask")

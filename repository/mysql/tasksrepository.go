@@ -3,6 +3,7 @@ package mysql
 import (
 	"github.com/jmoiron/sqlx"
 	"goacs/models/tasks"
+	"log"
 )
 
 type TasksRepository struct {
@@ -17,7 +18,11 @@ func NewTasksRepository(connection *sqlx.DB) TasksRepository {
 
 func (t *TasksRepository) GetTasksForCPE(cpe_uuid string) []tasks.Task {
 	var cpeTasks []tasks.Task
-	_ = t.db.Select(&cpeTasks, "SELECT * FROM tasks WHERE cpe_uuid=? AND done_at is null AND not_before <= now()", cpe_uuid)
+	err := t.db.Select(&cpeTasks, "SELECT * FROM tasks WHERE cpe_uuid=? AND done_at is null", cpe_uuid)
+
+	if err != nil {
+		log.Println(err.Error())
+	}
 
 	return cpeTasks
 }
