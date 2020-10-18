@@ -46,7 +46,7 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 	case acsxml.INFORM:
 		informDecision := methods.InformDecision{&reqRes}
 		informDecision.CpeResponseParser()
-		informDecision.AcsRequest()
+		informDecision.CpeInformResponse()
 
 	case acsxml.EMPTY:
 		log.Println("EMPTY RESPONSE")
@@ -111,19 +111,15 @@ func ProcessTasks(reqRes *acshttp.ReqRes, event string) {
 
 	if len(cpeTasks) > 0 {
 		scriptEngine := scripts.NewScriptEngine(reqRes.Session)
-		script := `
-SetParameter("SYSTEM.X_GOACS.FromScript", "OK")
-`
-		result, err := scriptEngine.Execute(script)
-		log.Println(result, err)
-		value, err := reqRes.Session.CPE.GetParameterValue("SYSTEM.X_GOACS.FromScript")
-		log.Println("READ PARAMETER")
-		log.Println(value)
-
 		filteredTasks := tasks.FilterTasksByEvent(event, cpeTasks)
 		for _, cpeTask := range filteredTasks {
-			log.Println(" cpeTask")
-			log.Println(cpeTask)
+			log.Println("processing task")
+			log.Println(cpeTask, cpeTask.Task)
+			if cpeTask.Task == tasks.RunScript {
+				_, _ = scriptEngine.Execute(cpeTask.Script)
+			}
+
+			tasksRepository.DoneTask(cpeTask.Id)
 		}
 	}
 }

@@ -12,7 +12,7 @@ type InformDecision struct {
 	ReqRes *http.ReqRes
 }
 
-func (InformDecision *InformDecision) AcsRequest() {
+func (InformDecision *InformDecision) CpeInformResponse() {
 	InformDecision.ReqRes.Session.PrevReqType = acsxml.INFORM
 	_, _ = fmt.Fprint(InformDecision.ReqRes.Response, InformDecision.ReqRes.Envelope.InformResponse())
 }

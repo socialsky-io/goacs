@@ -4,6 +4,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"goacs/models/tasks"
 	"log"
+	"time"
 )
 
 type TasksRepository struct {
@@ -39,4 +40,9 @@ func (t *TasksRepository) GetAllTasksForCPE(cpe_uuid string) []tasks.Task {
 	_ = t.db.Select(&cpeTasks, "SELECT * FROM tasks WHERE cpe_uuid=?", cpe_uuid)
 
 	return cpeTasks
+}
+
+func (t *TasksRepository) DoneTask(task_id int64) {
+	_, _ = t.db.Exec("UPDATE tasks SET done_at = ? WHERE id = ?", time.Now(), task_id)
+
 }

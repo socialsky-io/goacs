@@ -22,7 +22,16 @@ func Start() {
 	registerAcsHandler(Instance)
 	RegisterApiRoutes(Instance)
 
-	err := Instance.Run(":" + env.Get("HTTP_PORT", "8085"))
+	var err error
+	if env.Get("HTTP_TLS", "false") == "false" {
+		err = Instance.Run(":" + env.Get("HTTP_PORT", "8085"))
+	} else {
+		err = Instance.RunTLS(
+			":"+env.Get("HTTP_PORT", "8085"),
+			env.Get("TLS_CERT", ""),
+			env.Get("TLS_KEY", ""),
+		)
+	}
 	fmt.Println("Instance started....")
 
 	if err != nil {

@@ -24,6 +24,7 @@ func NewScriptEngine(session *acs.ACSSession) ScriptEngine {
 	}
 
 	_ = scriptEnv.Define("SetParameter", se.SetParameter)
+	_ = scriptEnv.Define("SaveDevice", se.SaveDevice)
 
 	return se
 }

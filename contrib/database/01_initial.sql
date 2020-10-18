@@ -96,10 +96,11 @@ create table tasks
 (
     id int auto_increment
         primary key,
-    cpe_uuid varchar(36) null,
-    event varchar(20) null,
-    not_before datetime null,
-    script text null,
-    created_at datetime null,
+    cpe_uuid varchar(36),
+    event varchar(20),
+    not_before datetime,
+    task varchar(80),
+    script text default '',
+    created_at datetime,
     done_at datetime null
 );
