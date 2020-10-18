@@ -34,7 +34,7 @@ func Login(ctx *gin.Context) {
 	user, err := userRepository.GetUserByAuthData(request.Username, request.Password)
 
 	if err != nil {
-		log.Println("Cannot find user")
+		log.Println("Cannot find user", err.Error())
 		return
 	}
 

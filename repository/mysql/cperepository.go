@@ -37,6 +37,16 @@ func (r *CPERepository) All() ([]*cpe.CPE, error) {
 	return cpes, nil
 }
 
+func (r *CPERepository) Count() (cpe_count int64) {
+	err := r.db.Unsafe().Get(&cpe_count, "SELECT count(uuid) FROM cpe")
+
+	if err != nil {
+		return 0
+	}
+
+	return cpe_count
+}
+
 func (r *CPERepository) List(request repository.PaginatorRequest) ([]cpe.CPE, int) {
 	var total int
 	var cpes = make([]cpe.CPE, 0)

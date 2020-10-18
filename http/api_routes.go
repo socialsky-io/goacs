@@ -14,6 +14,7 @@ func RegisterApiRoutes(gin *gin.Engine) {
 
 	apiGroup.Use(jwt.JWTAuthMiddleware(env.Get("JWT_SECRET", "")))
 	{
+		apiGroup.GET("/dashboard", controllers.GetDashboardData)
 		apiGroup.POST("/user/create", controllers.UserCreate)
 
 		apiGroup.GET("/device", controllers.GetDevicesList)

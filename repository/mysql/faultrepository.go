@@ -4,6 +4,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"goacs/models/cpe"
+	"goacs/models/fault"
 	"goacs/repository"
 	"time"
 )
@@ -23,15 +24,30 @@ func SaveFault(cpe *cpe.CPE, code string, message string) {
 	repository.SaveFault(cpe, code, message)
 }
 
-func (repository *FaultRepository) SaveFault(cpe *cpe.CPE, code string, message string) {
+func (r *FaultRepository) SaveFault(cpe *cpe.CPE, code string, message string) {
 	uuidInstance, _ := uuid.NewRandom()
 	uuidString := uuidInstance.String()
 
-	repository.db.Exec("INSERT INTO faults VALUES (?,?,?,?,?)",
+	r.db.Exec("INSERT INTO faults VALUES (?,?,?,?,?)",
 		uuidString,
 		cpe.UUID,
 		code,
 		message,
 		time.Now())
 
+}
+
+func (r *FaultRepository) GetLastDay() (faults []fault.Fault) {
+	_ = r.db.Select(&faults, "SELECT * FROM faults WHERE created_at >= NOW() - INTERVAL 1 DAY")
+	return faults
+}
+
+func (r *FaultRepository) CountLastDay() (fault_count int64) {
+	err := r.db.Get(&fault_count, "SELECT count(uuid) FROM faults WHERE created_at >= NOW() - INTERVAL 1 DAY")
+
+	if err != nil {
+		return 0
+	}
+
+	return fault_count
 }
