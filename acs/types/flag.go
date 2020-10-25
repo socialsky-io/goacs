@@ -102,12 +102,10 @@ func (flag *Flag) Value() (driver.Value, error) {
 }
 
 func (flag *Flag) Scan(src interface{}) (err error) {
-	var flagVal Flag
 	switch src.(type) {
 	case []uint8:
 		src := src.([]byte)
-		flagVal, err = Parse(string(src))
-		flag = &flagVal
+		*flag, err = Parse(string(src))
 	default:
 		err = errors.New("Invalid flag")
 	}

@@ -3,6 +3,8 @@ package mysql
 import (
 	"database/sql"
 	"fmt"
+	"github.com/doug-martin/goqu/v9"
+	_ "github.com/doug-martin/goqu/v9/dialect/mysql"
 	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
 	"github.com/thoas/go-funk"
@@ -315,10 +317,37 @@ func (r *CPERepository) GetCPEParameters(cpe *cpe.CPE) ([]types.ParameterValueSt
 }
 
 func (r *CPERepository) ListCPEParameters(cpe *cpe.CPE, request repository.PaginatorRequest) ([]types.ParameterValueStruct, int) {
+	dialect := goqu.Dialect("mysql")
+
+	baseBulder := dialect.From("cpe_parameters").
+		Where(goqu.C("cpe_uuid").Eq(cpe.UUID))
+
+	if len(request.Filter) > 0 {
+		for key, value := range request.Filter {
+			baseBulder = baseBulder.Where(goqu.Ex{
+				key: goqu.Op{"ilike": "%" + value + "%"},
+			})
+		}
+	}
+
+	totalSql, _, _ := baseBulder.
+		Select(goqu.COUNT("*")).
+		ToSQL()
+
 	var total int
-	_ = r.db.Get(&total, "SELECT count(*) FROM cpe_parameters WHERE cpe_uuid=?", cpe.UUID)
+	_ = r.db.Get(&total, totalSql)
 	parameters := make([]types.ParameterValueStruct, 0)
-	err := r.db.Unsafe().Select(&parameters, "SELECT * FROM cpe_parameters WHERE cpe_uuid=? LIMIT ?,?", cpe.UUID, request.CalcOffset(), request.PerPage)
+	parametersBuilder := baseBulder.
+		Offset(uint(request.CalcOffset())).
+		Limit(uint(request.PerPage))
+
+	log.Println(request.Filter)
+
+	parametersSql, _, _ := parametersBuilder.ToSQL()
+
+	log.Println(parametersSql)
+
+	err := r.db.Unsafe().Select(&parameters, parametersSql)
 
 	if err != nil {
 		fmt.Println("Error while fetching query results")

@@ -7,8 +7,9 @@ import (
 )
 
 type PaginatorRequest struct {
-	Page    int `json:"page"`
-	PerPage int `json:"per_page"`
+	Page    int               `json:"page"`
+	PerPage int               `json:"per_page"`
+	Filter  map[string]string `json:"filter"`
 }
 
 type PaginatorResponse struct {
@@ -39,9 +40,12 @@ func PaginatorRequestFromContext(ctx *gin.Context) PaginatorRequest {
 	}
 	perPage, _ := strconv.Atoi(qPerPage)
 
+	filter := ctx.QueryMap("filter")
+
 	return PaginatorRequest{
 		Page:    page,
 		PerPage: perPage,
+		Filter:  filter,
 	}
 }
 
