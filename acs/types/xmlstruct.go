@@ -70,6 +70,15 @@ type GetParameterValuesResponse struct {
 	ParameterList []ParameterValueStruct `xml:"Body>GetParameterValuesResponse>ParameterList>ParameterValueStruct"`
 }
 
+type AddObjectResponseStruct struct {
+	InstanceNumber int `xml:"Body>AddObjectResponse>InstanceNumber"`
+	Status         int `xml:"Body>AddObjectResponse>Status"`
+}
+
+type DeleteObjectResponseStruct struct {
+	Status int `xml:"Body>DeleteObjectResponse>Status"`
+}
+
 type ACSBool bool
 
 func (abool *ACSBool) UnmarshalXMLAttr(attr xml.Attr) (err error) {
@@ -224,6 +233,40 @@ func (envelope *Envelope) SetParameterValues(info []ParameterValueStruct) string
 
 	request += `</ParameterList>
 		</cwmp:SetParameterValues>
+  </soapenv:Body>
+</soapenv:Envelope>`
+
+	return request
+}
+
+func (envelope *Envelope) AddObjectRequest(objectName string, parameterKey string) string {
+	request := `<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cwmp="urn:dslforum-org:cwmp-1-0" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soapenv:Header>
+      <cwmp:ID soapenv:mustUnderstand="1">` + envelope.Header.ID + `</cwmp:ID>
+  </soapenv:Header>
+  <soapenv:Body>
+      <cwmp:AddObject>
+			<ObjectName>` + objectName + `</ObjectName>
+			<ParameterKey>` + parameterKey + `</ParameterKey>
+		</cwmp:AddObject>
+  </soapenv:Body>
+</soapenv:Envelope>`
+
+	return request
+}
+
+func (envelope *Envelope) DeleteObjectRequest(objectName string, parameterKey string) string {
+	request := `<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cwmp="urn:dslforum-org:cwmp-1-0" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <soapenv:Header>
+      <cwmp:ID soapenv:mustUnderstand="1">` + envelope.Header.ID + `</cwmp:ID>
+  </soapenv:Header>
+  <soapenv:Body>
+      <cwmp:DeleteObject>
+			<ObjectName>` + objectName + `</ObjectName>
+			<ParameterKey>` + parameterKey + `</ParameterKey>
+		</cwmp:DeleteObject>
   </soapenv:Body>
 </soapenv:Envelope>`
 
