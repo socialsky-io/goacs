@@ -107,19 +107,18 @@ func ProcessSessionJobs(reqRes *acshttp.ReqRes) {
 func ProcessTasks(reqRes *acshttp.ReqRes, event string) {
 	tasksRepository := mysql.NewTasksRepository(reqRes.DBConnection)
 	cpeTasks := tasksRepository.GetTasksForCPE(reqRes.Session.CPE.UUID)
-	log.Println("TASKS LEN", len(cpeTasks))
 
 	if len(cpeTasks) > 0 {
 		scriptEngine := scripts.NewScriptEngine(reqRes.Session)
 		filteredTasks := tasks.FilterTasksByEvent(event, cpeTasks)
 		for _, cpeTask := range filteredTasks {
-			log.Println("processing task")
-			log.Println(cpeTask, cpeTask.Task)
 			if cpeTask.Task == tasks.RunScript {
 				_, _ = scriptEngine.Execute(cpeTask.Script)
 			}
 
-			tasksRepository.DoneTask(cpeTask.Id)
+			if cpeTask.Infinite == false {
+				tasksRepository.DoneTask(cpeTask.Id)
+			}
 		}
 	}
 }

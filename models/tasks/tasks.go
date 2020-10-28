@@ -18,6 +18,7 @@ type Task struct {
 	NotBefore time.Time    `json:"not_before" db:"not_before"`
 	Task      string       `json:"task" db:"task"`
 	Script    string       `json:"script" db:"script"`
+	Infinite  bool         `json:"infinite" db:"infinite"`
 	CreatedAt time.Time    `json:"created_at" db:"created_at"`
 	DoneAt    sql.NullTime `json:"done_at" db:"done_at"`
 }

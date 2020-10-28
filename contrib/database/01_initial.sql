@@ -101,6 +101,7 @@ create table tasks
     not_before datetime,
     task varchar(80),
     script text default '',
+    infinite bool default false,
     created_at datetime,
     done_at datetime null
 );
