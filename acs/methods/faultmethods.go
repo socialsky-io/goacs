@@ -8,7 +8,7 @@ import (
 )
 
 type FaultDecision struct {
-	ReqRes *http.ReqRes
+	ReqRes *http.CPERequest
 }
 
 func (FaultDecision *FaultDecision) ResponseDecision() {

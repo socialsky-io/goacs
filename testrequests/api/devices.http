@@ -1,0 +1,4 @@
+GET http://localhost:8085/api/device/3ec91f87-5313-41e9-88fa-f53b76405b99/parameters?filter[name]=DeviceInfo&filter[value]=ZTEEQCEE5F01395
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MDM2NTM1MTcsImlzcyI6InVzZXIiLCJzdWIiOiJhZmI4OGQyZS1iMTYxLTRmYWYtOTVkNi1kM2QzMWY4YTYxNDIifQ.TVkcKL9sOyr4OqQqSr43HLAJKMlKrztPqe1cDNgnOeM
+

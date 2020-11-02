@@ -33,7 +33,7 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 
 	reqType, envelope := parseEnvelope(buffer, session)
 
-	var reqRes = acshttp.ReqRes{
+	var reqRes = acshttp.CPERequest{
 		Request:      request,
 		Response:     w,
 		DBConnection: repository.GetConnection(),
@@ -96,7 +96,7 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 
 }
 
-func ProcessSessionJobs(reqRes *acshttp.ReqRes) {
+func ProcessSessionJobs(reqRes *acshttp.CPERequest) {
 	switch reqRes.Session.NextJob {
 	case acs.JOB_SENDPARAMETERS:
 		parameterDecisions := methods.ParameterDecisions{ReqRes: reqRes}
@@ -104,7 +104,7 @@ func ProcessSessionJobs(reqRes *acshttp.ReqRes) {
 	}
 }
 
-func ProcessTasks(reqRes *acshttp.ReqRes, event string) {
+func ProcessTasks(reqRes *acshttp.CPERequest, event string) {
 	tasksRepository := mysql.NewTasksRepository(reqRes.DBConnection)
 	cpeTasks := tasksRepository.GetTasksForCPE(reqRes.Session.CPE.UUID)
 

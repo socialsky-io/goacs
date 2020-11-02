@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	acshttp "goacs/acs/http"
 	"goacs/acs/types"
 	"goacs/models/cpe"
 	"goacs/repository"
@@ -81,4 +82,16 @@ func getCPEFromContext(ctx *gin.Context, cpeRepository mysql.CPERepository) (*cp
 	}
 
 	return cpeModel, nil
+}
+
+func Kick(ctx *gin.Context) {
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, err := getCPEFromContext(ctx, cperepository)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	acsRequest := acshttp.NewACSRequest(cpeModel)
+	acsRequest.Kick()
 }

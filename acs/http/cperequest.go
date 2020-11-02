@@ -7,7 +7,7 @@ import (
 	"net/http"
 )
 
-type ReqRes struct {
+type CPERequest struct {
 	Request      *http.Request
 	Response     http.ResponseWriter
 	DBConnection *sqlx.DB

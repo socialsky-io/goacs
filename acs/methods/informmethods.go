@@ -9,7 +9,7 @@ import (
 )
 
 type InformDecision struct {
-	ReqRes *http.ReqRes
+	ReqRes *http.CPERequest
 }
 
 func (InformDecision *InformDecision) CpeInformResponse() {

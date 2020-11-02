@@ -12,7 +12,7 @@ import (
 )
 
 type ParameterDecisions struct {
-	ReqRes *http.ReqRes
+	ReqRes *http.CPERequest
 }
 
 func (pd *ParameterDecisions) ParameterNamesRequest(recursively bool) {
@@ -31,7 +31,7 @@ func (pd *ParameterDecisions) CpeParameterNamesResponseParser() {
 	var gpnr acsxml.GetParameterNamesResponse
 	log.Println("CpeParameterNamesResponseParser")
 
-	//log.Println(string(pd.ReqRes.Body))
+	//log.Println(string(pd.CPERequest.Body))
 	_ = xml.Unmarshal(pd.ReqRes.Body, &gpnr)
 	pd.ReqRes.Session.CPE.AddParametersInfo(gpnr.ParameterList)
 
@@ -73,13 +73,13 @@ func (pd *ParameterDecisions) GetParameterValuesResponseParser() {
 		}
 	}
 
-	//log.Println(pd.ReqRes.Session.CPE.ParameterValues)
+	//log.Println(pd.CPERequest.Session.CPE.ParameterValues)
 	_ = cpeRepository.BulkInsertOrUpdateParameters(&pd.ReqRes.Session.CPE, pd.ReqRes.Session.CPE.ParameterValues)
 
 }
 
 func (pd *ParameterDecisions) SetParameterValuesResponse() {
-	//parametersToWrite := pd.ReqRes.Session.CPE.GetParametersWithFlag("W")
+	//parametersToWrite := pd.CPERequest.Session.CPE.GetParametersWithFlag("W")
 	//log.Println("parametersToWrite")
 	////log.Println(parametersToWrite)
 

@@ -105,3 +105,6 @@ create table tasks
     created_at datetime,
     done_at datetime null
 );
+
+create index tasks_cpe_uuid_index
+    on tasks (cpe_uuid);
