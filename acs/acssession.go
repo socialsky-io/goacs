@@ -5,6 +5,7 @@ import (
 	"goacs/acs/types"
 	"goacs/models/cpe"
 	"goacs/models/tasks"
+	"log"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -120,9 +121,10 @@ func (session *ACSSession) FillCPESessionFromInform(inform types.Inform) {
 
 func (session *ACSSession) FillCPESessionBaseInfo(parameters []types.ParameterValueStruct) {
 	session.CPE.AddParameterValues(parameters)
+	log.Println(session.CPE.ParameterValues)
 	session.CPE.ConnectionRequestUrl, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.ConnectionRequestURL")
 	session.CPE.ConnectionRequestUser, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.Username")
-	session.CPE.ConnectionRequestUser, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.Password")
+	session.CPE.ConnectionRequestPassword, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.Password")
 	session.CPE.HardwareVersion, _ = session.CPE.GetParameterValue(session.CPE.Root + ".DeviceInfo.HardwareVersion")
 	session.CPE.SoftwareVersion, _ = session.CPE.GetParameterValue(session.CPE.Root + ".DeviceInfo.SoftwareVersion")
 	ipAddrStr, _ := session.CPE.GetParameterValue(session.CPE.Root + "..WANDevice.1.WANConnectionDevice.1.WANIPConnection.1.ExternalIPAddress")

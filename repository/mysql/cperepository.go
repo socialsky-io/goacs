@@ -138,9 +138,7 @@ func (r *CPERepository) UpdateOrCreate(cpe *cpe.CPE) (result bool, cpeExist bool
 		stmt, _ := r.db.Prepare(`UPDATE cpe SET 
                hardware_version=?, 
                software_version=?, 
-               connection_request_url=?, 
-               connection_request_user=?,
-      			   connection_request_password=?,       
+               connection_request_url=?,   
                updated_at=? 
 			   WHERE uuid=?`)
 
@@ -148,8 +146,6 @@ func (r *CPERepository) UpdateOrCreate(cpe *cpe.CPE) (result bool, cpeExist bool
 			cpe.HardwareVersion,
 			cpe.SoftwareVersion,
 			cpe.ConnectionRequestUrl,
-			cpe.ConnectionRequestUser,
-			cpe.ConnectionRequestPassword,
 			time.Now(),
 			dbCPE.UUID,
 		)

@@ -31,6 +31,8 @@ func (acsRequest *ACSRequest) Kick() {
 	if err != nil {
 		log.Println("Kick error", err.Error())
 	}
+
+	log.Println(acsRequest.Response)
 }
 
 func (acsRequest *ACSRequest) Send() error {
