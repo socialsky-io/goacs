@@ -2,9 +2,11 @@ package types
 
 import (
 	"encoding/xml"
+	"math/rand"
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Envelope struct {
@@ -80,6 +82,17 @@ type DeleteObjectResponseStruct struct {
 }
 
 type ACSBool bool
+
+func NewEnvelope() Envelope {
+	rand.NewSource(time.Now().UnixNano())
+	return Envelope{
+		XMLName: xml.Name{},
+		Header: Header{
+			ID: strconv.Itoa(rand.Int()),
+		},
+		Body: Body{},
+	}
+}
 
 func (abool *ACSBool) UnmarshalXMLAttr(attr xml.Attr) (err error) {
 

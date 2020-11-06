@@ -2,22 +2,24 @@ package acs
 
 import (
 	"fmt"
+	digest_auth_client "github.com/xinsnake/go-http-digest-auth-client"
 	"goacs/acs/types"
 	"goacs/models/cpe"
 	"goacs/models/tasks"
 	"log"
-	"math/rand"
 	"net/http"
-	"strconv"
 	"sync"
 	"time"
 )
 
-const SessionLifetime = 15
+const SessionLifetime = 300
 const SessionGoroutineTimeout = 10
 
 const (
-	JOB_SENDPARAMETERS = 1
+	JOB_NONE               = 0
+	JOB_GETPARAMETERNAMES  = 1
+	JOB_GETPARAMETERVALUES = 2
+	JOB_SENDPARAMETERS     = 3
 )
 
 type ACSSession struct {
@@ -42,57 +44,72 @@ func StartSession() {
 	go removeOldSessions()
 }
 
-func CreateSession(request *http.Request, w http.ResponseWriter) (*ACSSession, http.ResponseWriter) {
-	fmt.Println("### request")
-	var sessionId = ""
+func GetSessionFromRequest(request *http.Request) *ACSSession {
+	var session *ACSSession
 	cookie, err := request.Cookie("sessionId")
 
-	var session *ACSSession
-
 	if err != nil {
-		sessionId = generateSessionId()
-	} else {
-		sessionId = cookie.Value
+		log.Println("cannot get cookie from request")
+		return nil
 	}
-
-	fmt.Println("Trying to retive session from memory " + sessionId)
-	lock.RLock()
-	_, exist := acsSessions[sessionId]
-	lock.RUnlock()
-
-	if exist == false {
-		fmt.Println("session non exist in memory")
-		fmt.Println("Creating new session " + sessionId)
-		session = createEmptySession(sessionId)
-	} else {
-		session = acsSessions[sessionId]
-		fmt.Println("session exist in memory")
+	session = GetSessionById(cookie.Value)
+	if session != nil {
 		session.IsNew = false
 	}
 
-	newCookie := http.Cookie{Name: "sessionId", Value: sessionId, Expires: time.Now().Add(SessionLifetime * time.Second)}
-	http.SetCookie(w, &newCookie)
-
-	return session, w
+	return session
 }
 
-func generateSessionId() string {
-	rand.NewSource(time.Now().UnixNano())
-	return strconv.Itoa(rand.Int())
+func GetSessionById(sessionId string) *ACSSession {
+	fmt.Println("Trying to retive session from memory " + sessionId)
+	lock.RLock()
+	session := acsSessions[sessionId]
+	lock.RUnlock()
+
+	return session
 }
 
-func printSessions() {
-	for sessionId, session := range acsSessions {
-		fmt.Println("SessionID " + sessionId + " SessionData: " + strconv.FormatBool(session.IsNew))
+func AddCookieToResponseWriter(session *ACSSession, w http.ResponseWriter) http.ResponseWriter {
+	cookie := http.Cookie{Name: "sessionId", Value: session.Id}
+	http.SetCookie(w, &cookie)
+
+	return w
+}
+
+func AddCookieToRequest(session *ACSSession, r *http.Request) {
+	cookie := http.Cookie{Name: "sessionId", Value: session.Id}
+	r.AddCookie(&cookie)
+}
+
+func AddCookieToDigestRequest(session *ACSSession, r *digest_auth_client.DigestRequest) {
+	cookie := http.Cookie{Name: "sessionId", Value: session.Id}
+	r.Header.Add("Set-Cookie", cookie.String())
+}
+
+func GetOrCreateSession(sessionId string) *ACSSession {
+	var session *ACSSession
+	session = GetSessionById(sessionId)
+
+	if session == nil {
+		session = CreateEmptySession(sessionId)
 	}
+
+	return session
 }
 
-func createEmptySession(sessionId string) *ACSSession {
+func CreateEmptySession(sessionId string) *ACSSession {
+	log.Println("creating new session", sessionId)
 	session := ACSSession{Id: sessionId, IsNew: true, CreatedAt: time.Now()}
 	lock.Lock()
 	acsSessions[sessionId] = &session
 	lock.Unlock()
 	return acsSessions[sessionId]
+}
+
+func DeleteSession(sessionId string) {
+	lock.Lock()
+	delete(acsSessions, sessionId)
+	lock.Unlock()
 }
 
 func removeOldSessions() {
@@ -101,9 +118,7 @@ func removeOldSessions() {
 		for sessionId, session := range acsSessions {
 			if now.Sub(session.CreatedAt).Minutes() > SessionLifetime {
 				fmt.Println("DELETING OLD SESSION " + sessionId)
-				lock.Lock()
-				delete(acsSessions, sessionId)
-				lock.Unlock()
+				DeleteSession(sessionId)
 			}
 		}
 		time.Sleep(SessionGoroutineTimeout * time.Second)
@@ -116,12 +131,10 @@ func (session *ACSSession) FillCPESessionFromInform(inform types.Inform) {
 	session.IsBoot = inform.IsBootEvent()
 	session.IsBootstrap = inform.IsBootstrapEvent()
 	session.FillCPESessionBaseInfo(inform.ParameterList)
-	fmt.Println(session.CPE)
 }
 
 func (session *ACSSession) FillCPESessionBaseInfo(parameters []types.ParameterValueStruct) {
 	session.CPE.AddParameterValues(parameters)
-	log.Println(session.CPE.ParameterValues)
 	session.CPE.ConnectionRequestUrl, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.ConnectionRequestURL")
 	session.CPE.ConnectionRequestUser, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.Username")
 	session.CPE.ConnectionRequestPassword, _ = session.CPE.GetParameterValue(session.CPE.Root + ".ManagementServer.Password")

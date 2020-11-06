@@ -2,11 +2,13 @@ package http
 
 import (
 	"github.com/jmoiron/sqlx"
+	dac "github.com/xinsnake/go-http-digest-auth-client"
+	"goacs/acs"
+	acsxml "goacs/acs/types"
 	"goacs/models/cpe"
 	"goacs/repository"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -15,13 +17,40 @@ type ACSRequest struct {
 	CPE          *cpe.CPE
 	Body         string
 	Response     *http.Response
+	Session      *acs.ACSSession
 }
 
 func NewACSRequest(cpe *cpe.CPE) *ACSRequest {
-	return &ACSRequest{
+	request := &ACSRequest{
 		DBConnection: repository.GetConnection(),
 		CPE:          cpe,
 		Body:         "",
+	}
+
+	request.Session = acs.CreateEmptySession(cpe.SerialNumber)
+
+	return request
+}
+
+func (ACSRequest *ACSRequest) AddObject(param string) {
+	envelope := acsxml.NewEnvelope()
+	reqBody := envelope.AddObjectRequest(param, "")
+
+	ACSRequest.Body = reqBody
+	err := ACSRequest.Send()
+
+	if err != nil {
+		log.Println("AddObject error", err.Error())
+	}
+
+}
+
+func (ACSRequest *ACSRequest) GetParameterValues(path string) {
+	ACSRequest.Session.NextJob = acs.JOB_GETPARAMETERNAMES
+	err := ACSRequest.Send()
+
+	if err != nil {
+		log.Println("GetParameterValues error", err.Error())
 	}
 }
 
@@ -32,32 +61,24 @@ func (acsRequest *ACSRequest) Kick() {
 		log.Println("Kick error", err.Error())
 	}
 
-	log.Println(acsRequest.Response)
 }
 
 func (acsRequest *ACSRequest) Send() error {
-	request, err := http.NewRequest("GET", acsRequest.CPE.ConnectionRequestUrl, strings.NewReader(acsRequest.Body))
-
-	if err != nil {
-		log.Println("Request send error", err.Error())
-
-		return err
-	}
-
-	request.SetBasicAuth(acsRequest.CPE.ConnectionRequestUser, acsRequest.CPE.ConnectionRequestPassword)
+	request := dac.NewRequest(acsRequest.CPE.ConnectionRequestUser, acsRequest.CPE.ConnectionRequestPassword, "GET", acsRequest.CPE.ConnectionRequestUrl, acsRequest.Body)
 
 	client := http.Client{
 		Timeout: time.Second * 5,
 	}
 
-	response, err := client.Do(request)
+	request.HTTPClient = &client
+
+	response, err := request.Execute()
 
 	if err != nil {
+		log.Println("acs req error", err)
 		return err
 	}
-
 	defer response.Body.Close()
-
 	acsRequest.Response = response
 
 	return nil

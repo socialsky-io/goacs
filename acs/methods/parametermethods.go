@@ -31,14 +31,12 @@ func (pd *ParameterDecisions) CpeParameterNamesResponseParser() {
 	var gpnr acsxml.GetParameterNamesResponse
 	log.Println("CpeParameterNamesResponseParser")
 
-	//log.Println(string(pd.CPERequest.Body))
 	_ = xml.Unmarshal(pd.ReqRes.Body, &gpnr)
 	pd.ReqRes.Session.CPE.AddParametersInfo(gpnr.ParameterList)
 
 	cpeRepository := mysql.NewCPERepository(repository.GetConnection())
 	_ = cpeRepository.BulkInsertOrUpdateParameters(&pd.ReqRes.Session.CPE, pd.ReqRes.Session.CPE.GetAddObjectParameters())
 
-	//fmt.Println(gpnr.ParameterList)
 }
 
 func (pd *ParameterDecisions) GetParameterValuesRequest(parameters []acsxml.ParameterInfo) {

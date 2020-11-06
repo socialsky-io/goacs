@@ -12,6 +12,6 @@ type CPERequest struct {
 	Response     http.ResponseWriter
 	DBConnection *sqlx.DB
 	Session      *acs.ACSSession
-	Envelope     acsxml.Envelope
+	Envelope     *acsxml.Envelope
 	Body         []byte
 }

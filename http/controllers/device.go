@@ -8,13 +8,17 @@ import (
 	"goacs/models/cpe"
 	"goacs/repository"
 	"goacs/repository/mysql"
-	"log"
 	"net/http"
 )
 
 type ParameterRequest struct {
 	Name  string `json:"name" binding:"required"`
 	Value string `json:"value" binding:"required"`
+}
+
+type AddObjectRequest struct {
+	Name string `json:"name" binding:"required"`
+	Key  string `json:"key"`
 }
 
 func GetDevice(ctx *gin.Context) {
@@ -30,7 +34,6 @@ func GetDeviceParameters(ctx *gin.Context) {
 	cperepository := mysql.NewCPERepository(repository.GetConnection())
 	cpeModel, err := getCPEFromContext(ctx, cperepository)
 	if err == nil {
-		log.Println(paginatorRequest, cpeModel.UUID)
 		parameters, total := cperepository.ListCPEParameters(cpeModel, paginatorRequest)
 		response := repository.NewPaginatorResponse(paginatorRequest, total, parameters)
 		json.NewEncoder(ctx.Writer).Encode(response)
@@ -82,6 +85,45 @@ func getCPEFromContext(ctx *gin.Context, cpeRepository mysql.CPERepository) (*cp
 	}
 
 	return cpeModel, nil
+}
+
+func GetParameterValues(ctx *gin.Context) {
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, err := getCPEFromContext(ctx, cperepository)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	parameters, err := cperepository.GetCPEParameters(cpeModel)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	acsRequest := acshttp.NewACSRequest(cpeModel)
+	acsRequest.GetParameterValues(cpe.DetermineDeviceTreeRootPath(parameters))
+
+}
+
+func AddObject(ctx *gin.Context) {
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, err := getCPEFromContext(ctx, cperepository)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	addObjectRequest := AddObjectRequest{}
+	err = ctx.ShouldBindJSON(&addObjectRequest)
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	acsRequest := acshttp.NewACSRequest(cpeModel)
+	acsRequest.AddObject(addObjectRequest.Name)
+
 }
 
 func Kick(ctx *gin.Context) {

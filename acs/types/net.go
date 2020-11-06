@@ -3,9 +3,7 @@ package types
 import (
 	"database/sql/driver"
 	"errors"
-	"log"
 	"net"
-	"reflect"
 )
 
 type IPAddress net.IPAddr
@@ -15,7 +13,6 @@ func (i IPAddress) Value() (driver.Value, error) {
 }
 
 func (i *IPAddress) Scan(src interface{}) (err error) {
-	log.Println(reflect.TypeOf(src).String())
 
 	switch src.(type) {
 	case []uint8:
