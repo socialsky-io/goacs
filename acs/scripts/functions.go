@@ -22,3 +22,7 @@ func (se *ScriptEngine) SaveDevice() {
 	cpeRepository := mysql.NewCPERepository(repository.GetConnection())
 	_ = cpeRepository.BulkInsertOrUpdateParameters(&se.ACSSession.CPE, se.ACSSession.CPE.ParameterValues)
 }
+
+func (se *ScriptEngine) AddObject(path string) {
+
+}

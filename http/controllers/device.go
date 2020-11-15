@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"encoding/json"
 	"github.com/gin-gonic/gin"
 	acshttp "goacs/acs/http"
 	"goacs/acs/types"
+	"goacs/http/response"
 	"goacs/models/cpe"
 	"goacs/repository"
 	"goacs/repository/mysql"
@@ -25,8 +25,11 @@ func GetDevice(ctx *gin.Context) {
 	cperepository := mysql.NewCPERepository(repository.GetConnection())
 	cpeModel, err := getCPEFromContext(ctx, cperepository)
 	if err == nil {
-		json.NewEncoder(ctx.Writer).Encode(cpeModel)
+		response.ResponseData(ctx, cpeModel)
+		return
 	}
+
+	response.ResponseError(ctx, 404, "Not found", "")
 }
 
 func GetDeviceParameters(ctx *gin.Context) {
@@ -35,8 +38,8 @@ func GetDeviceParameters(ctx *gin.Context) {
 	cpeModel, err := getCPEFromContext(ctx, cperepository)
 	if err == nil {
 		parameters, total := cperepository.ListCPEParameters(cpeModel, paginatorRequest)
-		response := repository.NewPaginatorResponse(paginatorRequest, total, parameters)
-		json.NewEncoder(ctx.Writer).Encode(response)
+		responseData := repository.NewPaginatorResponse(paginatorRequest, total, parameters)
+		response.ResponsePaginatior(ctx, responseData)
 	}
 }
 
@@ -44,8 +47,8 @@ func GetDevicesList(ctx *gin.Context) {
 	paginatorRequest := repository.PaginatorRequestFromContext(ctx)
 	cperepository := mysql.NewCPERepository(repository.GetConnection())
 	cpes, total := cperepository.List(paginatorRequest)
-	response := repository.NewPaginatorResponse(paginatorRequest, total, cpes)
-	json.NewEncoder(ctx.Writer).Encode(response)
+	responseData := repository.NewPaginatorResponse(paginatorRequest, total, cpes)
+	response.ResponsePaginatior(ctx, responseData)
 }
 
 func UpdateParameter(ctx *gin.Context) {
@@ -92,13 +95,15 @@ func GetParameterValues(ctx *gin.Context) {
 	cpeModel, err := getCPEFromContext(ctx, cperepository)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.ResponseError(ctx, http.StatusBadRequest, err.Error(), "")
+		return
 	}
 
 	parameters, err := cperepository.GetCPEParameters(cpeModel)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.ResponseError(ctx, http.StatusBadRequest, err.Error(), "")
+		return
 	}
 
 	acsRequest := acshttp.NewACSRequest(cpeModel)
