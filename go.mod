@@ -25,6 +25,7 @@ require (
 	golang.org/x/sys v0.0.0-20200602225109-6fdc65e7d980 // indirect
 	google.golang.org/protobuf v1.24.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
+	gopkg.in/guregu/null.v4 v4.0.0
 	gopkg.in/yaml.v2 v2.3.0 // indirect
 )
 

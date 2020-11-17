@@ -1,7 +1,7 @@
 package tasks
 
 import (
-	"database/sql"
+	"gopkg.in/guregu/null.v4"
 	"time"
 )
 
@@ -12,15 +12,15 @@ const (
 )
 
 type Task struct {
-	Id        int64        `json:"id" db:"id"`
-	CpeUuid   string       `json:"cpe_uuid" db:"cpe_uuid"`
-	Event     string       `json:"event" db:"event"`
-	NotBefore time.Time    `json:"not_before" db:"not_before"`
-	Task      string       `json:"task" db:"task"`
-	Script    string       `json:"script" db:"script"`
-	Infinite  bool         `json:"infinite" db:"infinite"`
-	CreatedAt time.Time    `json:"created_at" db:"created_at"`
-	DoneAt    sql.NullTime `json:"done_at" db:"done_at"`
+	Id        int64     `json:"id" db:"id"`
+	CpeUuid   string    `json:"cpe_uuid" db:"cpe_uuid"`
+	Event     string    `json:"event" db:"event"`
+	NotBefore time.Time `json:"not_before" db:"not_before"`
+	Task      string    `json:"task" db:"task"`
+	Script    string    `json:"script" db:"script"`
+	Infinite  bool      `json:"infinite" db:"infinite"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
+	DoneAt    null.Time `json:"done_at" db:"done_at"`
 }
 
 func FilterTasksByEvent(event string, tasksList []Task) []Task {

@@ -111,6 +111,21 @@ func GetParameterValues(ctx *gin.Context) {
 
 }
 
+func GetDeviceQueuedTasks(ctx *gin.Context) {
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, err := getCPEFromContext(ctx, cperepository)
+
+	if err != nil {
+		response.ResponseError(ctx, http.StatusBadRequest, err.Error(), "")
+		return
+	}
+
+	taskRepository := mysql.NewTasksRepository(repository.GetConnection())
+	tasks := taskRepository.GetTasksForCPE(cpeModel.UUID)
+
+	response.ResponseData(ctx, tasks)
+}
+
 func AddObject(ctx *gin.Context) {
 	cperepository := mysql.NewCPERepository(repository.GetConnection())
 	cpeModel, err := getCPEFromContext(ctx, cperepository)
@@ -128,7 +143,6 @@ func AddObject(ctx *gin.Context) {
 
 	acsRequest := acshttp.NewACSRequest(cpeModel)
 	acsRequest.AddObject(addObjectRequest.Name)
-
 }
 
 func Kick(ctx *gin.Context) {
