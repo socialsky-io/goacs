@@ -23,7 +23,7 @@ func GetDashboardData(ctx *gin.Context) {
 		DevicesCount:    cpeRepository.Count(),
 		InformsCount:    0,
 		ExceptionsCount: fRepository.CountLastDay(),
-		Faults:          fRepository.GetLastDay(),
+		Faults:          fRepository.GetLastDay(100),
 	}
 
 	json.NewEncoder(ctx.Writer).Encode(response)

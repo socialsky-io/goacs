@@ -3,33 +3,36 @@ package scripts
 import (
 	"github.com/mattn/anko/env"
 	"github.com/mattn/anko/vm"
-	"goacs/acs"
+	acshttp "goacs/acs/http"
+	"log"
 )
 
 type ScriptEngine struct {
-	Env        *env.Env
-	ACSSession *acs.ACSSession
-	debug      bool
+	Env    *env.Env
+	ReqRes *acshttp.CPERequest
+	debug  bool
 }
 
-func NewScriptEngine(session *acs.ACSSession) ScriptEngine {
+func NewScriptEngine(reqRes *acshttp.CPERequest) ScriptEngine {
 	scriptEnv := env.NewEnv()
-	_ = scriptEnv.Define("session", session)
-	_ = scriptEnv.Define("device", session.CPE)
+	_ = scriptEnv.Define("session", reqRes.Session)
+	_ = scriptEnv.Define("device", reqRes.Session.CPE)
 
 	se := ScriptEngine{
-		ACSSession: session,
-		debug:      false,
-		Env:        scriptEnv,
+		ReqRes: reqRes,
+		debug:  false,
+		Env:    scriptEnv,
 	}
 
 	_ = scriptEnv.Define("SetParameter", se.SetParameter)
 	_ = scriptEnv.Define("SaveDevice", se.SaveDevice)
+	_ = scriptEnv.Define("AddObject", se.AddObject)
 
 	return se
 }
 
 func (se *ScriptEngine) Execute(script string) (interface{}, error) {
+	log.Println("Script execution", script)
 	return vm.Execute(se.Env, nil, script)
 }
 

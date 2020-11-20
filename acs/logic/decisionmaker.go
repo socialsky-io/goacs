@@ -53,14 +53,8 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 		if reqRes.Session.PrevReqType == acsxml.INFORM {
 			log.Println("EMPTY ON INFORM", reqRes.Session.IsNew, reqRes.Session.ReadAllParameters)
 			if reqRes.Session.IsNew == false && reqRes.Session.ReadAllParameters == true {
-				//fmt.Println("GPN REQ")
-				//parameterDecisions := methods.ParameterDecisions{&reqRes}
-				//parameterDecisions.ParameterNamesRequest(true)
 				reqRes.Session.NextJob = acs.JOB_GETPARAMETERNAMES
 			}
-
-			ProcessSessionJobs(&reqRes)
-			ProcessTasks(&reqRes, reqType)
 		}
 
 	case acsxml.GPNResp:
@@ -86,6 +80,16 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 		paramaterDecisions := methods.ParameterDecisions{ReqRes: &reqRes}
 		paramaterDecisions.SetParameterValuesResponse()
 
+	case acsxml.AddObjResp:
+		log.Println("AddObjResp")
+		paramaterDecisions := methods.ParameterDecisions{ReqRes: &reqRes}
+		addObjectResponseStruct := paramaterDecisions.AddObjectResponseParser()
+
+		if addObjectResponseStruct.Status == 0 {
+			//TODO: make to get only parameters that was created by addObject
+			reqRes.Session.NextJob = acs.JOB_GETPARAMETERNAMES
+		}
+
 	case acsxml.FaultResp:
 		var faultresponse acsxml.Fault
 		_ = xml.Unmarshal(buffer, &faultresponse)
@@ -96,6 +100,9 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 	default:
 		fmt.Println("UNSUPPORTED REQTYPE ", reqType)
 	}
+
+	ProcessSessionJobs(&reqRes)
+	ProcessTasks(&reqRes, reqType)
 
 }
 
@@ -130,7 +137,7 @@ func ProcessTasks(reqRes *acshttp.CPERequest, event string) {
 	cpeTasks := tasksRepository.GetTasksForCPE(reqRes.Session.CPE.UUID)
 
 	if len(cpeTasks) > 0 {
-		scriptEngine := scripts.NewScriptEngine(reqRes.Session)
+		scriptEngine := scripts.NewScriptEngine(reqRes)
 		filteredTasks := tasks.FilterTasksByEvent(event, cpeTasks)
 		for _, cpeTask := range filteredTasks {
 			if cpeTask.Task == tasks.RunScript {
@@ -161,6 +168,8 @@ func parseEnvelope(buffer []byte) (string, acsxml.Envelope) {
 			requestType = acsxml.GPVResp
 		case "setparametervaluesresponse":
 			requestType = acsxml.SPVResp
+		case "addobjectresponse":
+			requestType = acsxml.AddObjResp
 		case "fault":
 			requestType = acsxml.FaultResp
 		default:

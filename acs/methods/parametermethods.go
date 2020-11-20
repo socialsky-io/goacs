@@ -89,3 +89,10 @@ func (pd *ParameterDecisions) SetParameterValuesResponse() {
 		pd.ReqRes.Session.PrevReqType = acsxml.SPVResp
 	}
 }
+
+func (pd *ParameterDecisions) AddObjectResponseParser() acsxml.AddObjectResponseStruct {
+	var addObject acsxml.AddObjectResponseStruct
+	_ = xml.Unmarshal(pd.ReqRes.Body, &addObject)
+
+	return addObject
+}

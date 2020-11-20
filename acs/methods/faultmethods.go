@@ -16,7 +16,7 @@ func (FaultDecision *FaultDecision) ResponseDecision() {
 	FaultDecision.ReqRes.Session.PrevReqType = acsxml.FaultResp
 	repository := mysql.NewFaultRepository()
 	repository.SaveFault(&FaultDecision.ReqRes.Session.CPE,
-		FaultDecision.ReqRes.Session.CPE.Fault.FaultCode,
-		FaultDecision.ReqRes.Session.CPE.Fault.FaultString,
+		FaultDecision.ReqRes.Session.CPE.Fault.DetailFaultCode,
+		FaultDecision.ReqRes.Session.CPE.Fault.DetailFaultString,
 	)
 }

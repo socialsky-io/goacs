@@ -6,6 +6,7 @@ import (
 	"goacs/models/cpe"
 	"goacs/models/fault"
 	"goacs/repository"
+	"strconv"
 	"time"
 )
 
@@ -37,8 +38,8 @@ func (r *FaultRepository) SaveFault(cpe *cpe.CPE, code string, message string) {
 
 }
 
-func (r *FaultRepository) GetLastDay() (faults []fault.Fault) {
-	_ = r.db.Select(&faults, "SELECT * FROM faults WHERE created_at >= NOW() - INTERVAL 1 DAY")
+func (r *FaultRepository) GetLastDay(limit int) (faults []fault.Fault) {
+	_ = r.db.Select(&faults, "SELECT * FROM faults WHERE created_at >= NOW() - INTERVAL 1 DAY LIMIT "+strconv.Itoa(limit))
 	return faults
 }
 

@@ -2,6 +2,7 @@ package tasks
 
 import (
 	"gopkg.in/guregu/null.v4"
+	"log"
 	"time"
 )
 
@@ -26,6 +27,8 @@ type Task struct {
 func FilterTasksByEvent(event string, tasksList []Task) []Task {
 	var filteredTasks []Task
 	for _, task := range tasksList {
+		log.Println(task.Event, event)
+		log.Println(task.Event == event)
 		if task.Event == event {
 			filteredTasks = append(filteredTasks, task)
 		}
