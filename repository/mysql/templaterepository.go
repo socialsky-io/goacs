@@ -11,13 +11,13 @@ type TemplateRepository struct {
 	db *sqlx.DB
 }
 
-func NewTemplateRepository(connection *sqlx.DB) TemplateRepository {
-	return TemplateRepository{
+func NewTemplateRepository(connection *sqlx.DB) *TemplateRepository {
+	return &TemplateRepository{
 		db: connection,
 	}
 }
 
-func (r TemplateRepository) Find(id int64) (*templates.Template, error) {
+func (r *TemplateRepository) Find(id int64) (*templates.Template, error) {
 	templateInstance := new(templates.Template)
 	err := r.db.Unsafe().Get(templateInstance, "SELECT * FROM templates WHERE id=? LIMIT 1", id)
 
@@ -31,7 +31,7 @@ func (r TemplateRepository) Find(id int64) (*templates.Template, error) {
 	return templateInstance, nil
 }
 
-func (r TemplateRepository) FindByName(name string) (*templates.Template, error) {
+func (r *TemplateRepository) FindByName(name string) (*templates.Template, error) {
 	templateInstance := new(templates.Template)
 
 	err := r.db.Unsafe().Get(templateInstance, "SELECT id, name FROM templates WHERE name=? LIMIT 1", name)
@@ -46,7 +46,22 @@ func (r TemplateRepository) FindByName(name string) (*templates.Template, error)
 	return templateInstance, nil
 }
 
-func (r TemplateRepository) GetParametersForTemplate(template_id int64) ([]templates.TemplateParameter, error) {
+func (r *TemplateRepository) List(request repository.PaginatorRequest) ([]templates.Template, int) {
+	var total int
+	var templates = make([]templates.Template, 0)
+	_ = r.db.Get(&total, "SELECT count(*) FROM templates")
+	err := r.db.Unsafe().Select(&templates, "SELECT * FROM templates LIMIT ?,?", request.CalcOffset(), request.PerPage)
+
+	if err != nil {
+		fmt.Println("Error while fetching query results")
+		fmt.Println(err.Error())
+		return nil, 0
+	}
+
+	return templates, total
+}
+
+func (r *TemplateRepository) GetParametersForTemplate(template_id int64) ([]templates.TemplateParameter, error) {
 	var parameters = []templates.TemplateParameter{}
 
 	err := r.db.Unsafe().Select(&parameters,

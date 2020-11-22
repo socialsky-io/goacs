@@ -27,6 +27,8 @@ func RegisterApiRoutes(gin *gin.Engine) {
 		apiGroup.POST("/device/:uuid/getparametervalues", controllers.GetParameterValues)
 		apiGroup.GET("/device/:uuid/tasks", controllers.GetDeviceQueuedTasks)
 
+		apiGroup.GET("/template", controllers.GetTemplatesList)
+
 		apiGroup.GET("/faults/today", controllers.GetTodayFaults)
 
 		apiGroup.POST("/file", controllers.UploadFile)
