@@ -10,6 +10,7 @@ import (
 func RegisterApiRoutes(gin *gin.Engine) {
 	var env lib.Env
 	apiGroup := gin.Group("/api")
+	apiGroup.Use()
 	apiGroup.POST("/auth/login", controllers.Login)
 
 	apiGroup.Use(jwt.JWTAuthMiddleware(env.Get("JWT_SECRET", "")))

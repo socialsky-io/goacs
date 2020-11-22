@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"goacs/acs/logic"
 	"goacs/lib"
+	"log"
+	"time"
 )
 
 var Instance *gin.Engine
@@ -13,12 +15,25 @@ var Instance *gin.Engine
 func Start() {
 	var env lib.Env
 	fmt.Println("Server setup")
-	Instance := gin.Default()
+	Instance = gin.Default()
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowAllOrigins = true
+	corsConfig.AllowOrigins = []string{"http://localhost:8080", "https://localhost:8080"}
 	corsConfig.AllowCredentials = true
-	corsConfig.AllowHeaders = []string{"Origin", "Authorization", "Content-Type", "Accept", "Content-Length"}
+	corsConfig.AllowHeaders = []string{"Origin", "Authorization", "Content-Type", "Accept", "Content-Length", "Connection", "Upgrade"}
+
 	Instance.Use(cors.New(corsConfig))
+
+	NewSocketIO(Instance)
+	go GetSocketServer().Serve()
+
+	go func() {
+		for {
+			log.Println("sending event")
+			GetSocketServer().BroadcastToRoom("/", "all", "supa event")
+			time.Sleep(time.Second * 2)
+		}
+	}()
+
 	registerAcsHandler(Instance)
 	RegisterApiRoutes(Instance)
 
