@@ -81,6 +81,25 @@ type DeleteObjectResponseStruct struct {
 	Status int `xml:"Body>DeleteObjectResponse>Status"`
 }
 
+type DownloadResponseStruct struct {
+	Status       int       `xml:"Body>DownloadResponse>Status"`
+	StartTime    time.Time `xml:"Body>DownloadResponse>StartTime"`
+	CompleteTime time.Time `xml:"Body>DownloadResponse>CompleteTime"`
+}
+
+type DownloadRequestStruct struct {
+	CommandKey     string
+	FileType       string
+	URL            string
+	Username       string
+	Password       string
+	FileSize       int
+	TargetFileName string
+	DelaySeconds   int
+	SuccessURL     string
+	FailureURL     string
+}
+
 type ACSBool bool
 
 func NewEnvelope() Envelope {
@@ -284,4 +303,17 @@ func (envelope *Envelope) DeleteObjectRequest(objectName string, parameterKey st
 </soapenv:Envelope>`
 
 	return request
+}
+
+func (envelope *Envelope) DownloadRequest() string {
+	return `<?xml version="1.0" encoding="UTF-8"?>
+<soapenv:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:cwmp="urn:dslforum-org:cwmp-1-0" xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <soapenv:Header>
+        <cwmp:ID soapenv:mustUnderstand="1">` + envelope.Header.ID + `</cwmp:ID>
+    </soapenv:Header>
+    <soapenv:Body>
+        <cwmp:Download>
+		</cwmp:Download>
+    </soapenv:Body>
+</soapenv:Envelope>`
 }

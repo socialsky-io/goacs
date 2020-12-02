@@ -9,6 +9,7 @@ import (
 
 func RegisterApiRoutes(gin *gin.Engine) {
 	var env lib.Env
+	gin.GET("/file/:filename", controllers.DownloadFile)
 	apiGroup := gin.Group("/api")
 	apiGroup.Use()
 	apiGroup.POST("/auth/login", controllers.Login)
@@ -33,6 +34,5 @@ func RegisterApiRoutes(gin *gin.Engine) {
 		apiGroup.GET("/faults/today", controllers.GetTodayFaults)
 
 		apiGroup.POST("/file", controllers.UploadFile)
-		apiGroup.GET("/file/:filename", controllers.DownloadFile)
 	}
 }

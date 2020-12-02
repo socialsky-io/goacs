@@ -44,6 +44,17 @@ func UploadFile(ctx *gin.Context) {
 }
 
 func DownloadFile(ctx *gin.Context) {
+	env := lib.Env{}
+	fileDir := env.Get("FILESTORE_PATH", "./storage")
+	absPath, _ := filepath.Abs(fileDir)
+	fileName := ctx.Param("filename")
+	//Currently dangerous method :/
+	//TODO: add filepath security check
+	filePath := filepath.Join(absPath, filepath.Base(fileDir+"/"+fileName))
+
+	ctx.Writer.Header().Add("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileName)) //fmt.Sprintf("attachment; filename=%s", filename) Downloaded file renamed
+	ctx.Writer.Header().Add("Content-Type", "application/octet-stream")
+	ctx.File(filePath)
 
 }
 
