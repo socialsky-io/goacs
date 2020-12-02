@@ -8,28 +8,6 @@ import (
 	"time"
 )
 
-/**
-create table cpe
-(
-	uuid varchar(36) not null
-		primary key,
-	serial_number varchar(50) null,
-	oui varchar(6) null,
-	software_version varchar(20) null,
-	hardware_version varchar(20) null,
-	ip_address varchar(15) null,
-	connection_request_url varchar(255) null,
-	connection_request_user varchar(50) null,
-	connection_request_password varchar(64) null,
-	created_at datetime default current_timestamp() not null,
-	updated_at datetime default current_timestamp() not null
-);
-
-create index cpe_serial_number_index
-	on cpe (serial_number);
-
-
-*/
 type CPE struct {
 	UUID                      string          `json:"uuid" db:"uuid"`
 	SerialNumber              string          `json:"serial_number" db:"serial_number"`

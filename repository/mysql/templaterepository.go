@@ -2,6 +2,7 @@ package mysql
 
 import (
 	"fmt"
+	"github.com/doug-martin/goqu/v9"
 	"github.com/jmoiron/sqlx"
 	"goacs/models/templates"
 	"goacs/repository"
@@ -76,4 +77,34 @@ func (r *TemplateRepository) GetParametersForTemplate(template_id int64) ([]temp
 	}
 
 	return parameters, nil
+}
+
+func (r *TemplateRepository) HydrateTemplatesParameters(templatesData []templates.Template) []templates.Template {
+
+	var parameters []templates.TemplateParameter
+	var ids []int64
+
+	for _, template := range templatesData {
+		ids = append(ids, template.Id)
+	}
+
+	dialect := goqu.Dialect("mysql")
+	selectSql, _, _ := dialect.From("templates_parameters").
+		Where(goqu.C("template_id").In(ids)).ToSQL()
+
+	err := r.db.Select(&parameters, selectSql)
+
+	if err != nil {
+		return templatesData
+	}
+
+	for templateIdx, template := range templatesData {
+		for _, parameter := range parameters {
+			if parameter.TemplateId == template.Id {
+				templatesData[templateIdx].Parameters = parameters
+			}
+		}
+	}
+
+	return templatesData
 }

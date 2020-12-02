@@ -1,17 +1,15 @@
 package templates
 
-import (
-	"goacs/acs/types"
-)
+import "goacs/acs/types"
 
 type Template struct {
-	Id         int64  `db:"id"`
-	Name       string `db:"name"`
-	Parameters []TemplateParameter
+	Id         int64               `db:"id" json:"id"`
+	Name       string              `db:"name" json:"name"`
+	Parameters []TemplateParameter `json:"parameters"`
 }
 
 type TemplateParameter struct {
-	TemplateId int64 `db:"template_id"`
+	TemplateId int64 `db:"template_id" json:"template_id"`
 	types.ParameterValueStruct
 }
 
