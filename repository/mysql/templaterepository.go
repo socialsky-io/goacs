@@ -6,6 +6,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"goacs/models/templates"
 	"goacs/repository"
+	"log"
 )
 
 type TemplateRepository struct {
@@ -107,4 +108,46 @@ func (r *TemplateRepository) HydrateTemplatesParameters(templatesData []template
 	}
 
 	return templatesData
+}
+
+func (r *TemplateRepository) ListTemplateParameters(template *templates.Template, request repository.PaginatorRequest) ([]templates.TemplateParameter, int) {
+	dialect := goqu.Dialect("mysql")
+
+	baseBulder := dialect.From("templates_parameters").
+		Where(goqu.C("template_id").Eq(template.Id))
+
+	if len(request.Filter) > 0 {
+		for key, value := range request.Filter {
+			baseBulder = baseBulder.Where(goqu.Ex{
+				key: goqu.Op{"ilike": "%" + value + "%"},
+			})
+		}
+	}
+
+	totalSql, _, _ := baseBulder.
+		Select(goqu.COUNT("*")).
+		ToSQL()
+
+	var total int
+	_ = r.db.Get(&total, totalSql)
+	var parameters []templates.TemplateParameter
+	parametersBuilder := baseBulder.
+		Offset(uint(request.CalcOffset())).
+		Limit(uint(request.PerPage))
+
+	log.Println(request.Filter)
+
+	parametersSql, _, _ := parametersBuilder.ToSQL()
+
+	log.Println(parametersSql)
+
+	err := r.db.Unsafe().Select(&parameters, parametersSql)
+
+	if err != nil {
+		fmt.Println("Error while fetching query results")
+		fmt.Println(err.Error())
+		return nil, 0
+	}
+
+	return parameters, total
 }

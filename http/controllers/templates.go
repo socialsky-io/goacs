@@ -6,6 +6,7 @@ import (
 	"goacs/models/templates"
 	"goacs/repository"
 	"goacs/repository/mysql"
+	"strconv"
 )
 
 type TemplateListResponse struct {
@@ -32,4 +33,39 @@ func GetTemplatesList(ctx *gin.Context) {
 
 	responseData := repository.NewPaginatorResponse(paginatorRequest, total, templateResponse)
 	response.ResponsePaginatior(ctx, responseData)
+}
+
+func GetTemplate(ctx *gin.Context) {
+	templateId, err := strconv.Atoi(ctx.Param("templateid"))
+
+	if err != nil {
+		response.ResponseError(ctx, 404, "", "")
+		return
+	}
+
+	templatesrepository := mysql.NewTemplateRepository(repository.GetConnection())
+	template, err := templatesrepository.Find(int64(templateId))
+
+	if err != nil {
+		response.ResponseError(ctx, 404, "", "")
+		return
+	}
+
+	response.ResponseData(ctx, template)
+}
+
+func GetTemplateParameters(ctx *gin.Context) {
+	templateId, err := strconv.Atoi(ctx.Param("templateid"))
+
+	paginatorRequest := repository.PaginatorRequestFromContext(ctx)
+	templatesrepository := mysql.NewTemplateRepository(repository.GetConnection())
+	template, err := templatesrepository.Find(int64(templateId))
+
+	if err == nil {
+		parameters, total := templatesrepository.ListTemplateParameters(template, paginatorRequest)
+		responseData := repository.NewPaginatorResponse(paginatorRequest, total, parameters)
+		response.ResponsePaginatior(ctx, responseData)
+		return
+	}
+
 }

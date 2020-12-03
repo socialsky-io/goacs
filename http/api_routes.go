@@ -30,6 +30,8 @@ func RegisterApiRoutes(gin *gin.Engine) {
 		apiGroup.GET("/device/:uuid/tasks", controllers.GetDeviceQueuedTasks)
 
 		apiGroup.GET("/template", controllers.GetTemplatesList)
+		apiGroup.GET("/template/:templateid", controllers.GetTemplate)
+		apiGroup.GET("/template/:templateid/parameters", controllers.GetTemplateParameters)
 
 		apiGroup.GET("/faults/today", controllers.GetTodayFaults)
 

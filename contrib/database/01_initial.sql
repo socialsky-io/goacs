@@ -46,17 +46,19 @@ create table templates
 
 create table templates_parameters
 (
-	template_id int not null,
+    uuid varchar(36) not null,
+    template_id int not null,
 	name varchar(255) not null,
 	value varchar(255) not null,
 	type varchar(16) not null,
 	flags varchar(10) not null default 'R',
 	created_at datetime default CURRENT_TIMESTAMP not null,
 	updated_at datetime default CURRENT_TIMESTAMP not null,
-	constraint templates_parameters_pk
-		unique (template_id, `name`),
-	constraint templates_parameters_template_id_key_index
+    constraint templates_parameters_pk
+        primary key (uuid),
+	constraint templates_parameters_unique
 		unique (template_id, `name`)
+
 );
 
 create table cpe_to_templates
