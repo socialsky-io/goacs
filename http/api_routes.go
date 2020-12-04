@@ -28,6 +28,7 @@ func RegisterApiRoutes(gin *gin.Engine) {
 		apiGroup.POST("/device/:uuid/addobject", controllers.AddObject)
 		apiGroup.POST("/device/:uuid/getparametervalues", controllers.GetParameterValues)
 		apiGroup.GET("/device/:uuid/tasks", controllers.GetDeviceQueuedTasks)
+		apiGroup.GET("/device/:uuid/templates", controllers.GetDeviceTemplates)
 
 		apiGroup.GET("/template", controllers.GetTemplatesList)
 		apiGroup.GET("/template/:templateid", controllers.GetTemplate)

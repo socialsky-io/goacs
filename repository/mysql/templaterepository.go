@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/jmoiron/sqlx"
+	"goacs/models/cpe"
 	"goacs/models/templates"
 	"goacs/repository"
 	"log"
@@ -150,4 +151,23 @@ func (r *TemplateRepository) ListTemplateParameters(template *templates.Template
 	}
 
 	return parameters, total
+}
+
+func (r *TemplateRepository) GetTemplatesForCPE(cpe *cpe.CPE) []templates.CPETemplate {
+	dialect := goqu.Dialect("mysql")
+
+	query, _, _ := dialect.From("cpe_to_templates").Join(
+		goqu.T("templates").As("t"),
+		goqu.On(goqu.Ex{"cpe_to_templates.template_id": goqu.I("t.id")}),
+	).Where(goqu.Ex{"cpe_to_templates.cpe_uuid": cpe.UUID}).
+		Order(goqu.I("priority").Desc()).ToSQL()
+
+	var cpeTemplates []templates.CPETemplate
+	err := r.db.Select(&cpeTemplates, query)
+	if err != nil {
+		log.Println(err)
+		return []templates.CPETemplate{}
+	}
+
+	return cpeTemplates
 }

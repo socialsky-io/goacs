@@ -8,6 +8,11 @@ type Template struct {
 	Parameters []TemplateParameter `json:"parameters"`
 }
 
+type CPETemplate struct {
+	Template
+	Priority int64 `db:"priority" json:"priority"`
+}
+
 type TemplateParameter struct {
 	TemplateId int64 `db:"template_id" json:"template_id"`
 	types.ParameterValueStruct

@@ -24,12 +24,13 @@ type AddObjectRequest struct {
 func GetDevice(ctx *gin.Context) {
 	cperepository := mysql.NewCPERepository(repository.GetConnection())
 	cpeModel, err := getCPEFromContext(ctx, cperepository)
-	if err == nil {
-		response.ResponseData(ctx, cpeModel)
+	if err != nil {
+		response.ResponseError(ctx, 404, "Not found", "")
 		return
 	}
 
-	response.ResponseError(ctx, 404, "Not found", "")
+	response.ResponseData(ctx, cpeModel)
+
 }
 
 func GetDeviceParameters(ctx *gin.Context) {
@@ -41,6 +42,14 @@ func GetDeviceParameters(ctx *gin.Context) {
 		responseData := repository.NewPaginatorResponse(paginatorRequest, total, parameters)
 		response.ResponsePaginatior(ctx, responseData)
 	}
+}
+
+func GetDeviceTemplates(ctx *gin.Context) {
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, _ := getCPEFromContext(ctx, cperepository)
+	templaterepository := mysql.NewTemplateRepository(repository.GetConnection())
+	templates := templaterepository.GetTemplatesForCPE(cpeModel)
+	response.ResponseData(ctx, templates)
 }
 
 func GetDevicesList(ctx *gin.Context) {
