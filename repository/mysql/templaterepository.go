@@ -171,3 +171,18 @@ func (r *TemplateRepository) GetTemplatesForCPE(cpe *cpe.CPE) []templates.CPETem
 
 	return cpeTemplates
 }
+
+func (r *TemplateRepository) AssignTemplateToDevice(cpe *cpe.CPE, template_id int64, priority int64) {
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.Insert("cpe_to_templates").Prepared(true).
+		Cols("cpe_uuid", "template_id", "priority").
+		Vals(goqu.Vals{cpe.UUID, template_id, priority}).ToSQL()
+
+	_, err := r.db.Exec(query, args...)
+
+	if err != nil {
+		log.Println("AssignTemplateToDevice error", err)
+	}
+
+}

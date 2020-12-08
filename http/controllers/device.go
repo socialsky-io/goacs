@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	acshttp "goacs/acs/http"
 	"goacs/acs/types"
+	"goacs/http/request"
 	"goacs/http/response"
 	"goacs/models/cpe"
 	"goacs/repository"
@@ -19,6 +20,11 @@ type ParameterRequest struct {
 type AddObjectRequest struct {
 	Name string `json:"name" binding:"required"`
 	Key  string `json:"key"`
+}
+
+type AssignTemplateToDeviceRequest struct {
+	TemplateId int64 `json:"template_id" validate:"required"`
+	Priority   int64 `json:"priority" validate:"required"`
 }
 
 func GetDevice(ctx *gin.Context) {
@@ -50,6 +56,27 @@ func GetDeviceTemplates(ctx *gin.Context) {
 	templaterepository := mysql.NewTemplateRepository(repository.GetConnection())
 	templates := templaterepository.GetTemplatesForCPE(cpeModel)
 	response.ResponseData(ctx, templates)
+}
+
+func AssignTemplateToDevice(ctx *gin.Context) {
+	var assignDeviceRequest AssignTemplateToDeviceRequest
+	_ = ctx.BindJSON(&assignDeviceRequest)
+	validator := request.NewApiValidator(ctx, assignDeviceRequest)
+	verr := validator.Validate()
+
+	if verr != nil {
+		response.ResponseValidationErrors(ctx, validator)
+		return
+	}
+
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, _ := getCPEFromContext(ctx, cperepository)
+	templaterepository := mysql.NewTemplateRepository(repository.GetConnection())
+	templaterepository.AssignTemplateToDevice(cpeModel, assignDeviceRequest.TemplateId, assignDeviceRequest.Priority)
+}
+
+func UnassignTemplateFromDevice(ctx *gin.Context) {
+
 }
 
 func GetDevicesList(ctx *gin.Context) {
