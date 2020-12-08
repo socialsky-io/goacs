@@ -38,6 +38,8 @@ func RegisterApiRoutes(gin *gin.Engine) {
 
 		apiGroup.GET("/faults/today", controllers.GetTodayFaults)
 
+		apiGroup.GET("/file", controllers.ListFiles)
 		apiGroup.POST("/file", controllers.UploadFile)
+
 	}
 }

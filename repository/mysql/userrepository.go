@@ -5,6 +5,7 @@ import (
 	"github.com/jmoiron/sqlx"
 	"goacs/models/user"
 	"golang.org/x/crypto/bcrypt"
+	"log"
 )
 
 type UserRepository struct {
@@ -30,6 +31,8 @@ func (r *UserRepository) GetUserByAuthData(username string, password string) (us
 	if err != nil {
 		return user.User{}, err
 	}
+
+	log.Println(userModel.Password, password, user.EncryptPassword(password))
 
 	err = bcrypt.CompareHashAndPassword([]byte(userModel.Password), []byte(password))
 

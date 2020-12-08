@@ -3,14 +3,45 @@ package controllers
 import (
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"goacs/http/response"
 	"goacs/lib"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
-func ListFiles(ctx *gin.Context) {
+type FileInfoResponse struct {
+	Size     int64     `json:"size"`
+	Filename string    `json:"filename"`
+	IsDir    bool      `json:"is_dir"`
+	ModTime  time.Time `json:"mod_time"`
+}
 
+func ListFiles(ctx *gin.Context) {
+	env := lib.Env{}
+
+	fileDir := env.Get("FILESTORE_PATH", "./storage")
+	absPath, _ := filepath.Abs(fileDir)
+	files, err := ioutil.ReadDir(absPath)
+
+	if err != nil {
+		response.ResponseError(ctx, http.StatusInternalServerError, "File list error", err)
+		return
+	}
+
+	var fileResponse []FileInfoResponse
+
+	for _, file := range files {
+		fileResponse = append(fileResponse, FileInfoResponse{
+			Size:     file.Size(),
+			Filename: file.Name(),
+			IsDir:    file.IsDir(),
+			ModTime:  file.ModTime(),
+		})
+	}
+	response.ResponseData(ctx, fileResponse)
 }
 
 func UploadFile(ctx *gin.Context) {
@@ -18,7 +49,7 @@ func UploadFile(ctx *gin.Context) {
 
 	file, err := ctx.FormFile("file")
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		response.ResponseError(ctx, http.StatusBadRequest, "", err)
 		return
 	}
 
@@ -26,19 +57,19 @@ func UploadFile(ctx *gin.Context) {
 	absPath, err := filepath.Abs(fileDir)
 
 	if err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("upload file err: %s", err.Error())})
+		response.ResponseError(ctx, http.StatusBadRequest, fmt.Sprintf("upload file err: %s", err.Error()), err)
 		return
 	}
 
 	filePath := filepath.Join(absPath, filepath.Base(fileDir+"/"+file.Filename))
 
 	if fileExists(filePath) {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("File %s exists", file.Filename)})
+		response.ResponseError(ctx, http.StatusBadRequest, fmt.Sprintf("File %s exists", file.Filename), err)
 		return
 	}
 
 	if err := ctx.SaveUploadedFile(file, filePath); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": fmt.Sprintf("upload file err: %s", err.Error())})
+		response.ResponseError(ctx, http.StatusBadRequest, fmt.Sprintf("upload file err: %s", err.Error()), err)
 		return
 	}
 }

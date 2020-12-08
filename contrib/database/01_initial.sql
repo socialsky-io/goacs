@@ -93,6 +93,10 @@ create table users
         unique (username)
 );
 
+INSERT INTO users (uuid, username, password, email, status)
+VALUES ('84770763-4c6f-47b2-b966-97798c1b7e18', 'admin', '$2a$10$hpoB9cOropWQ6DTZuBku/e8hUkl7jNZ7F231/uJhEqE8Cipp4SdOC', 'admin@goacs.net', 1);
+
+
 create table tasks
 (
     id int auto_increment
