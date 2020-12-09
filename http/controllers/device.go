@@ -9,7 +9,9 @@ import (
 	"goacs/models/cpe"
 	"goacs/repository"
 	"goacs/repository/mysql"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 type ParameterRequest struct {
@@ -61,6 +63,7 @@ func GetDeviceTemplates(ctx *gin.Context) {
 func AssignTemplateToDevice(ctx *gin.Context) {
 	var assignDeviceRequest AssignTemplateToDeviceRequest
 	_ = ctx.BindJSON(&assignDeviceRequest)
+	log.Println(assignDeviceRequest)
 	validator := request.NewApiValidator(ctx, assignDeviceRequest)
 	verr := validator.Validate()
 
@@ -72,10 +75,30 @@ func AssignTemplateToDevice(ctx *gin.Context) {
 	cperepository := mysql.NewCPERepository(repository.GetConnection())
 	cpeModel, _ := getCPEFromContext(ctx, cperepository)
 	templaterepository := mysql.NewTemplateRepository(repository.GetConnection())
-	templaterepository.AssignTemplateToDevice(cpeModel, assignDeviceRequest.TemplateId, assignDeviceRequest.Priority)
+	err := templaterepository.AssignTemplateToDevice(cpeModel, assignDeviceRequest.TemplateId, assignDeviceRequest.Priority)
+
+	if err != nil {
+		response.Response500(ctx, "", err)
+		return
+	}
+
+	response.ResponseData(ctx, "")
 }
 
 func UnassignTemplateFromDevice(ctx *gin.Context) {
+	templateId, _ := strconv.Atoi(ctx.Param("template_id"))
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, _ := getCPEFromContext(ctx, cperepository)
+	templaterepository := mysql.NewTemplateRepository(repository.GetConnection())
+
+	err := templaterepository.UnassignTemplateFromDevice(cpeModel, int64(templateId))
+
+	if err != nil {
+		response.Response500(ctx, "", err)
+		return
+	}
+
+	response.ResponseData(ctx, "")
 
 }
 
