@@ -56,6 +56,7 @@ func (pd *ParameterDecisions) GetParameterValuesResponseParser() {
 	cpeRepository := mysql.NewCPERepository(repository.GetConnection())
 	_, _, _ = cpeRepository.UpdateOrCreate(&pd.ReqRes.Session.CPE)
 
+	//TODO: Fetch and apply template parameters
 	dbParameters, err := cpeRepository.GetCPEParameters(&pd.ReqRes.Session.CPE)
 	if err != nil {
 		log.Println("Error GetParameterValuesResponseParser ", err.Error())
