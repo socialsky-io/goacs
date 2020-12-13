@@ -2,6 +2,8 @@ package controllers
 
 import (
 	"github.com/gin-gonic/gin"
+	"goacs/acs/types"
+	"goacs/http/request"
 	"goacs/http/response"
 	"goacs/models/templates"
 	"goacs/repository"
@@ -12,6 +14,24 @@ import (
 type TemplateListResponse struct {
 	templates.Template
 	ParameterCount int64 `json:"parameter_count"`
+}
+
+type TemplateParameterStoreRequest struct {
+	TemplateId int64  `json:"template_id" validate:"required"`
+	Name       string `json:"name" validate:"required"`
+	Value      string `json:"value"`
+}
+
+type TemplateParameterUpdateRequest struct {
+	TemplateId    int64  `json:"template_id" validate:"required"`
+	ParameterUUID string `json:"parameter_uuid" validate:"required"`
+	Name          string `json:"name" validate:"required"`
+	Value         string `json:"value"`
+}
+
+type TemplateParameterDeleteRequest struct {
+	TemplateId    int64  `json:"template_id" validate:"required"`
+	ParameterUUID string `json:"parameter_uuid" validate:"required"`
 }
 
 func GetTemplatesList(ctx *gin.Context) {
@@ -67,5 +87,108 @@ func GetTemplateParameters(ctx *gin.Context) {
 		response.ResponsePaginatior(ctx, responseData)
 		return
 	}
+}
+
+func UpdateTemplateParameter(ctx *gin.Context) {
+	var templatePURequest TemplateParameterUpdateRequest
+	parameterId := ctx.Param("parameter_uuid")
+	templateId, _ := strconv.Atoi(ctx.Param("templateid"))
+
+	templatePURequest.ParameterUUID = parameterId
+	templatePURequest.TemplateId = int64(templateId)
+	_ = ctx.ShouldBindJSON(&templatePURequest)
+
+	validator := request.NewApiValidator(ctx, templatePURequest)
+
+	err := validator.Validate()
+
+	if err != nil {
+		response.ResponseValidationErrors(ctx, validator)
+		return
+	}
+
+	templatesRepository := mysql.NewTemplateRepository(repository.GetConnection())
+	err = templatesRepository.UpdateParameter(templatePURequest.ParameterUUID,
+		types.ParameterValueStruct{
+			Name:  templatePURequest.Name,
+			Value: templatePURequest.Value,
+			Type:  "",
+			Flag:  types.Flag{},
+		},
+	)
+
+	if err != nil {
+		response.Response500(ctx, "Error", err)
+		return
+	}
+
+	response.ResponseData(ctx, "")
+
+}
+
+func StoreTemplateParameter(ctx *gin.Context) {
+	var templatePSRequest TemplateParameterStoreRequest
+	templateId, _ := strconv.Atoi(ctx.Param("templateid"))
+
+	templatePSRequest.TemplateId = int64(templateId)
+	_ = ctx.ShouldBindJSON(&templatePSRequest)
+
+	validator := request.NewApiValidator(ctx, templatePSRequest)
+
+	err := validator.Validate()
+
+	if err != nil {
+		response.ResponseValidationErrors(ctx, validator)
+		return
+	}
+
+	templatesRepository := mysql.NewTemplateRepository(repository.GetConnection())
+	err = templatesRepository.CreateParameter(templatePSRequest.TemplateId,
+		types.ParameterValueStruct{
+			Name:  templatePSRequest.Name,
+			Value: templatePSRequest.Value,
+			Type:  "",
+			Flag: types.Flag{
+				Read:  true,
+				Write: true,
+			},
+		},
+	)
+
+	if err != nil {
+		response.Response500(ctx, "Error", err.Error())
+		return
+	}
+
+	response.ResponseData(ctx, "")
+}
+
+func DeleteTemplateParameter(ctx *gin.Context) {
+	var templatePDRequest TemplateParameterDeleteRequest
+	parameterId := ctx.Param("parameter_uuid")
+	templateId, _ := strconv.Atoi(ctx.Param("templateid"))
+
+	templatePDRequest.TemplateId = int64(templateId)
+	templatePDRequest.ParameterUUID = parameterId
+	_ = ctx.ShouldBindJSON(&templatePDRequest)
+	validator := request.NewApiValidator(ctx, templatePDRequest)
+
+	err := validator.Validate()
+
+	if err != nil {
+		response.ResponseValidationErrors(ctx, validator)
+		return
+	}
+
+	templatesRepository := mysql.NewTemplateRepository(repository.GetConnection())
+
+	err = templatesRepository.DeleteParameter(templatePDRequest.ParameterUUID, templatePDRequest.TemplateId)
+
+	if err != nil {
+		response.Response500(ctx, "Error", err.Error())
+		return
+	}
+
+	response.ResponseData(ctx, "")
 
 }

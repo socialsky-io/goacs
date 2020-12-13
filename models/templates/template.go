@@ -14,7 +14,8 @@ type CPETemplate struct {
 }
 
 type TemplateParameter struct {
-	TemplateId int64 `db:"template_id" json:"template_id"`
+	UUID       string `db:"uuid" json:"uuid" `
+	TemplateId int64  `db:"template_id" json:"template_id"`
 	types.ParameterValueStruct
 }
 

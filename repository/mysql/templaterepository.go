@@ -3,11 +3,14 @@ package mysql
 import (
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
+	"github.com/google/uuid"
 	"github.com/jmoiron/sqlx"
+	"goacs/acs/types"
 	"goacs/models/cpe"
 	"goacs/models/templates"
 	"goacs/repository"
 	"log"
+	"time"
 )
 
 type TemplateRepository struct {
@@ -199,6 +202,100 @@ func (r *TemplateRepository) UnassignTemplateFromDevice(cpe *cpe.CPE, template_i
 
 	if err != nil {
 		log.Println("UnassignTemplateFromDevice error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *TemplateRepository) FindParameterByName(template_id int64, parameter_name string) (types.ParameterValueStruct, error) {
+	var templateParameter types.ParameterValueStruct
+
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.From("template_parameters").
+		Where(goqu.Ex{
+			"template_id": template_id,
+			"name":        parameter_name,
+		}).ToSQL()
+
+	err := r.db.Get(&templateParameter, query, args...)
+
+	if err != nil {
+		return templateParameter, err
+	}
+
+	return templateParameter, nil
+}
+
+func (r *TemplateRepository) CreateParameter(template_id int64, parameter types.ParameterValueStruct) error {
+	uuidInstance, _ := uuid.NewRandom()
+	uuidString := uuidInstance.String()
+
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.Insert("templates_parameters").Prepared(true).
+		Cols("uuid", "template_id", "name", "value", "type", "flags", "created_at").
+		Vals(goqu.Vals{
+			uuidString,
+			template_id,
+			parameter.Name,
+			parameter.Value,
+			"",
+			parameter.Flag.AsString(),
+			time.Now(),
+		}).
+		ToSQL()
+
+	_, err := r.db.Exec(query, args...)
+
+	if err != nil {
+		log.Println("Template CreateParameter error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *TemplateRepository) UpdateParameter(parameter_uuid string, parameter types.ParameterValueStruct) error {
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.Update("templates_parameters").Prepared(true).
+		Set(goqu.Record{
+			"name":       parameter.Name,
+			"value":      parameter.Value,
+			"flags":      parameter.Flag.AsString(),
+			"updated_at": time.Now(),
+		}).
+		Where(goqu.Ex{
+			"uuid": parameter_uuid,
+		}).
+		ToSQL()
+
+	_, err := r.db.Exec(query, args...)
+
+	if err != nil {
+		log.Println("Template CreateParameter error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *TemplateRepository) DeleteParameter(parameter_uuid string, template_id int64) error {
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.Delete("templates_parameters").Prepared(true).
+		Where(goqu.Ex{
+			"uuid":        parameter_uuid,
+			"template_id": template_id,
+		}).
+		ToSQL()
+
+	_, err := r.db.Exec(query, args...)
+
+	if err != nil {
+		log.Println("Template DeleteParameter error", err)
 		return err
 	}
 

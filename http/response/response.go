@@ -19,7 +19,7 @@ func ResponseError(ctx *gin.Context, code int, message string, data interface{})
 }
 
 func Response500(ctx *gin.Context, message string, data interface{}) {
-	ResponseError(ctx, 500, message, responseMap("Server error", data))
+	ResponseError(ctx, 500, message, data)
 }
 
 func ResponseValidationErrors(ctx *gin.Context, validator *request.ApiValidator) {

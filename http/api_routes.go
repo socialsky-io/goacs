@@ -34,7 +34,10 @@ func RegisterApiRoutes(gin *gin.Engine) {
 
 		apiGroup.GET("/template", controllers.GetTemplatesList)
 		apiGroup.GET("/template/:templateid", controllers.GetTemplate)
+		apiGroup.POST("/template/:templateid/parameters", controllers.StoreTemplateParameter)
 		apiGroup.GET("/template/:templateid/parameters", controllers.GetTemplateParameters)
+		apiGroup.POST("/template/:templateid/parameters/:parameter_uuid", controllers.UpdateTemplateParameter)
+		apiGroup.DELETE("/template/:templateid/parameters/:parameter_uuid", controllers.DeleteTemplateParameter)
 
 		apiGroup.GET("/faults/today", controllers.GetTodayFaults)
 
