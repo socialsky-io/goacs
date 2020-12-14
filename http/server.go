@@ -6,7 +6,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"goacs/acs/logic"
 	"goacs/lib"
-	"log"
 	"time"
 )
 
@@ -28,7 +27,7 @@ func Start() {
 
 	go func() {
 		for {
-			log.Println("sending event")
+			//log.Println("sending event")
 			GetSocketServer().BroadcastToRoom("/", "all", "supa event")
 			time.Sleep(time.Second * 2)
 		}

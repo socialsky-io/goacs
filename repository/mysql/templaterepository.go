@@ -114,6 +114,30 @@ func (r *TemplateRepository) HydrateTemplatesParameters(templatesData []template
 	return templatesData
 }
 
+func (r *TemplateRepository) GetPrioritizedParametersForCPE(cpe *cpe.CPE) []types.PrioritizedParameters {
+	var prioParams []types.PrioritizedParameters
+
+	dialect := goqu.Dialect("mysql")
+
+	orderedTemplatesIdsQuery, args, _ := dialect.From(goqu.T("templates_parameters").As("tp")).
+		Prepared(true).
+		Join(
+			goqu.T("cpe_to_templates").As("c2t"),
+			goqu.On(goqu.Ex{"c2t.template_id": goqu.I("tp.template_id")}),
+		).
+		Where(goqu.Ex{"c2t.cpe_uuid": cpe.UUID}).
+		Order(goqu.I("c2t.priority").Asc()).ToSQL()
+
+	log.Println("GetPrioritizedParametersForCPE", orderedTemplatesIdsQuery)
+	err := r.db.Select(&prioParams, orderedTemplatesIdsQuery, args...)
+
+	if err != nil {
+		log.Println("Error in GetPrioritizedParametersForCPE", err.Error())
+	}
+
+	return prioParams
+}
+
 func (r *TemplateRepository) ListTemplateParameters(template *templates.Template, request repository.PaginatorRequest) ([]templates.TemplateParameter, int) {
 	dialect := goqu.Dialect("mysql")
 

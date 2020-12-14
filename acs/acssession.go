@@ -25,6 +25,7 @@ const (
 type ACSSession struct {
 	Id                string
 	IsNew             bool
+	IsNewInACS        bool
 	IsBoot            bool
 	IsBootstrap       bool
 	ReadAllParameters bool

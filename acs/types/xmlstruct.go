@@ -46,6 +46,11 @@ type Event struct {
 	CommandKey string
 }
 
+type PrioritizedParameters struct {
+	Priority int64 `db:"priority"`
+	ParameterValueStruct
+}
+
 type ParameterValueStruct struct {
 	Name  string `db:"name" json:"name"`
 	Value string `db:"value" json:"value"`

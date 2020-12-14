@@ -6,6 +6,7 @@ import (
 	"goacs/acs"
 	"goacs/acs/http"
 	acsxml "goacs/acs/types"
+	"goacs/models/cpe"
 	"goacs/repository"
 	"goacs/repository/mysql"
 	"log"
@@ -54,18 +55,21 @@ func (pd *ParameterDecisions) GetParameterValuesResponseParser() {
 	pd.ReqRes.Session.CPE.AddParameterValues(gpvr.ParameterList)
 	pd.ReqRes.Session.FillCPESessionBaseInfo(gpvr.ParameterList)
 	cpeRepository := mysql.NewCPERepository(repository.GetConnection())
+	templateRepository := mysql.NewTemplateRepository(repository.GetConnection())
 	_, _, _ = cpeRepository.UpdateOrCreate(&pd.ReqRes.Session.CPE)
 
-	//TODO: Fetch and apply template parameters
-	dbParameters, err := cpeRepository.GetCPEParameters(&pd.ReqRes.Session.CPE)
+	cpeDBParameters, err := cpeRepository.GetCPEParameters(&pd.ReqRes.Session.CPE)
 	if err != nil {
 		log.Println("Error GetParameterValuesResponseParser ", err.Error())
 	}
 
-	if len(dbParameters) > 0 {
+	templateParameters := templateRepository.GetPrioritizedParametersForCPE(&pd.ReqRes.Session.CPE)
+	cpeDBParameters = cpe.CombineTemplateParameters(cpeDBParameters, templateParameters)
+
+	if len(cpeDBParameters) > 0 {
 		//Get modified parameters
 		//Check for AddObject instances
-		diffParameters := pd.ReqRes.Session.CPE.GetChangedParametersToWrite(&dbParameters)
+		diffParameters := pd.ReqRes.Session.CPE.GetChangedParametersToWrite(&cpeDBParameters)
 		if len(diffParameters) > 0 {
 			pd.ReqRes.Session.CPE.ParametersQueue = diffParameters
 			pd.ReqRes.Session.NextJob = acs.JOB_SENDPARAMETERS
@@ -73,7 +77,9 @@ func (pd *ParameterDecisions) GetParameterValuesResponseParser() {
 	}
 
 	//log.Println(pd.CPERequest.Session.CPE.ParameterValues)
-	_ = cpeRepository.BulkInsertOrUpdateParameters(&pd.ReqRes.Session.CPE, pd.ReqRes.Session.CPE.ParameterValues)
+	if pd.ReqRes.Session.IsNewInACS {
+		_ = cpeRepository.BulkInsertOrUpdateParameters(&pd.ReqRes.Session.CPE, pd.ReqRes.Session.CPE.ParameterValues)
+	}
 
 }
 

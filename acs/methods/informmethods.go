@@ -39,5 +39,6 @@ func (InformDecision *InformDecision) CpeInformRequestParser() {
 	cpeRepository := mysql.NewCPERepository(InformDecision.ReqRes.DBConnection)
 	_, cpeExist, _ := cpeRepository.UpdateOrCreate(&InformDecision.ReqRes.Session.CPE)
 	InformDecision.ReqRes.Session.ReadAllParameters = !cpeExist
+	InformDecision.ReqRes.Session.IsNewInACS = !cpeExist
 	_, _ = cpeRepository.SaveParameters(&InformDecision.ReqRes.Session.CPE)
 }

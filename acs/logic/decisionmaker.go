@@ -51,8 +51,7 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 	case acsxml.EMPTY:
 		log.Println("EMPTY RESPONSE")
 		if reqRes.Session.PrevReqType == acsxml.INFORM {
-			log.Println("EMPTY ON INFORM", reqRes.Session.IsNew, reqRes.Session.ReadAllParameters)
-			if reqRes.Session.IsNew == false && reqRes.Session.ReadAllParameters == true {
+			if reqRes.Session.ReadAllParameters == true {
 				reqRes.Session.NextJob = acs.JOB_GETPARAMETERNAMES
 			}
 		}
@@ -60,18 +59,9 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 	case acsxml.GPNResp:
 		parameterDecisions := methods.ParameterDecisions{ReqRes: &reqRes}
 		parameterDecisions.CpeParameterNamesResponseParser()
+		reqRes.Session.NextJob = acs.JOB_GETPARAMETERVALUES
 		log.Println("GPNResponse next job", reqRes.Session.NextJob)
-		//parameterDecisions.GetParameterValuesRequest(reqRes.Session.CPE.ParametersInfo)
-		if reqRes.Session.CPE.NewInACS {
-			// CPE is new in acs (not exist)
-			reqRes.Session.NextJob = acs.JOB_GETPARAMETERVALUES
-			//parameterDecisions.GetParameterValuesRequest([]acsxml.ParameterInfo{
-			//	{
-			//		Name:     reqRes.Session.CPE.Root + ".",
-			//		Writable: "0",
-			//	},
-			//})
-		}
+
 	case acsxml.GPVResp:
 		parameterDecisions := methods.ParameterDecisions{ReqRes: &reqRes}
 		parameterDecisions.GetParameterValuesResponseParser()

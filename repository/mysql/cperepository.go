@@ -121,7 +121,7 @@ func (r *CPERepository) Create(cpe *cpe.CPE) (bool, error) {
 	}
 
 	cpe.UUID = uuidInstance.String()
-	cpe.NewInACS = true
+	//cpe.NewInACS = true
 
 	return true, nil
 }

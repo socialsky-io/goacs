@@ -26,7 +26,6 @@ type CPE struct {
 	ParametersQueue           []types.ParameterValueStruct
 	Fault                     types.Fault
 	UpdatedAt                 time.Time `json:"updated_at" db:"updated_at"`
-	NewInACS                  bool
 }
 
 func (cpe *CPE) AddParameterInfo(parameter types.ParameterInfo) {
@@ -90,6 +89,53 @@ func (cpe *CPE) AddParameterValues(parameters []types.ParameterValueStruct) {
 		parameter.Flag.Read = true
 		cpe.AddParameter(parameter)
 	}
+}
+
+func CombineTemplateParameters(cpeParameters []types.ParameterValueStruct, templateParameters []types.PrioritizedParameters) []types.ParameterValueStruct {
+	var parameters []types.ParameterValueStruct
+	for _, cpeParameter := range cpeParameters {
+		parameterExist := false
+		for _, templateParameter := range templateParameters {
+			if cpeParameter.Name == templateParameter.Name {
+				if templateParameter.Priority > 100 {
+					parameterExist = true
+					parameters = append(parameters, templateParameter.ParameterValueStruct)
+				}
+			}
+		}
+
+		if parameterExist == false {
+			parameters = append(parameters, cpeParameter)
+		}
+	}
+
+	for _, templateParameter := range templateParameters {
+		for _, cpeParameter := range cpeParameters {
+			if cpeParameter.Name == templateParameter.Name {
+				if templateParameter.Priority > 100 {
+					continue
+				}
+			}
+		}
+		parameters = append(parameters, templateParameter.ParameterValueStruct)
+	}
+
+	return parameters
+}
+
+func (cpe *CPE) ApplyTemplateParameters(parameters []types.PrioritizedParameters) {
+	result := CombineTemplateParameters(cpe.ParameterValues, parameters)
+	cpe.AddParameterValues(result)
+}
+
+func (cpe *CPE) ParameterValueExist(parameterName string) bool {
+	for _, parameterValue := range cpe.ParameterValues {
+		if parameterValue.Name == parameterName {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (cpe *CPE) GetParameterValue(parameterName string) (string, error) {
@@ -165,7 +211,7 @@ func (cpe *CPE) GetChangedParametersToWrite(otherParameters *[]types.ParameterVa
 
 	for _, cpeParam := range cpe.ParameterValues {
 		for _, otherParam := range *otherParameters {
-			if otherParam.Flag.Write && otherParam.Name == cpeParam.Name && otherParam.Value != cpeParam.Value {
+			if otherParam.Flag.Write == true && otherParam.Name == cpeParam.Name && otherParam.Value != cpeParam.Value {
 				log.Println("other param", otherParam.Value)
 				log.Println("cpe param", cpeParam.Value)
 				parametersDiff = append(parametersDiff, otherParam)
