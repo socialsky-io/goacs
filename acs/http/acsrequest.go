@@ -54,6 +54,15 @@ func (ACSRequest *ACSRequest) GetParameterValues(path string) {
 	}
 }
 
+func (ACSRequest *ACSRequest) SetParameterValues() {
+	ACSRequest.Session.NextJob = acs.JOB_SENDPARAMETERS
+	err := ACSRequest.Send()
+
+	if err != nil {
+		log.Println("SetParameterValues error", err.Error())
+	}
+}
+
 func (acsRequest *ACSRequest) Kick() {
 	err := acsRequest.Send()
 

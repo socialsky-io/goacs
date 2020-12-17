@@ -126,6 +126,22 @@ func (r *CPERepository) Create(cpe *cpe.CPE) (bool, error) {
 	return true, nil
 }
 
+func (r *CPERepository) DeleteDevice(cpe *cpe.CPE) {
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.Delete("cpe").
+		Prepared(true).
+		Where(goqu.C("cpe_uuid").Eq(cpe.UUID)).
+		ToSQL()
+
+	_, err := r.db.Exec(query, args...)
+
+	if err != nil {
+		log.Println("Cannot delete device ", err)
+	}
+
+}
+
 func (r *CPERepository) UpdateOrCreate(cpe *cpe.CPE) (result bool, cpeExist bool, err error) {
 
 	dbCPE, _ := r.FindBySerial(cpe.SerialNumber)
@@ -359,4 +375,19 @@ func (r *CPERepository) LoadParameters(cpe *cpe.CPE) (bool, error) {
 	cpe.ParameterValues, err = r.GetCPEParameters(cpe)
 
 	return err == nil, err
+}
+
+func (r *CPERepository) DeleteAllParameters(cpe *cpe.CPE) {
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.Delete("cpe_parameters").
+		Prepared(true).
+		Where(goqu.C("cpe_uuid").Eq(cpe.UUID)).
+		ToSQL()
+
+	_, err := r.db.Exec(query, args...)
+
+	if err != nil {
+		log.Println("Cannot delete device ", err)
+	}
 }

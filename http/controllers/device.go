@@ -41,6 +41,20 @@ func GetDevice(ctx *gin.Context) {
 
 }
 
+func DeleteDevice(ctx *gin.Context) {
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, err := getCPEFromContext(ctx, cperepository)
+
+	if err != nil {
+		response.ResponseError(ctx, 404, "Not found", "")
+		return
+	}
+
+	cperepository.DeleteDevice(cpeModel)
+	cperepository.DeleteAllParameters(cpeModel)
+
+}
+
 func GetDeviceParameters(ctx *gin.Context) {
 	paginatorRequest := repository.PaginatorRequestFromContext(ctx)
 	cperepository := mysql.NewCPERepository(repository.GetConnection())
@@ -134,10 +148,6 @@ func UpdateParameter(ctx *gin.Context) {
 	ctx.JSON(204, "")
 }
 
-func CreateParameter(ctx *gin.Context) {
-
-}
-
 func getCPEFromContext(ctx *gin.Context, cpeRepository mysql.CPERepository) (*cpe.CPE, error) {
 	cpeModel, err := cpeRepository.Find(ctx.Param("uuid"))
 
@@ -167,6 +177,20 @@ func GetParameterValues(ctx *gin.Context) {
 
 	acsRequest := acshttp.NewACSRequest(cpeModel)
 	acsRequest.GetParameterValues(cpe.DetermineDeviceTreeRootPath(parameters))
+
+}
+
+func SetParameterValues(ctx *gin.Context) {
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, err := getCPEFromContext(ctx, cperepository)
+
+	if err != nil {
+		response.ResponseError(ctx, http.StatusBadRequest, err.Error(), "")
+		return
+	}
+
+	acsRequest := acshttp.NewACSRequest(cpeModel)
+	acsRequest.SetParameterValues()
 
 }
 
