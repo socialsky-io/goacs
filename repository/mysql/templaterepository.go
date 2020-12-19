@@ -106,7 +106,7 @@ func (r *TemplateRepository) HydrateTemplatesParameters(templatesData []template
 	for templateIdx, template := range templatesData {
 		for _, parameter := range parameters {
 			if parameter.TemplateId == template.Id {
-				templatesData[templateIdx].Parameters = parameters
+				templatesData[templateIdx].Parameters = append(templatesData[templateIdx].Parameters, parameter)
 			}
 		}
 	}

@@ -15,8 +15,9 @@ import (
 )
 
 type ParameterRequest struct {
-	Name  string `json:"name" binding:"required"`
-	Value string `json:"value" binding:"required"`
+	Name  string `json:"name" validate:"required"`
+	Value string `json:"value" validate:"required"`
+	Flags string `json:"flags" validate:"required"`
 }
 
 type AddObjectRequest struct {
@@ -124,6 +125,25 @@ func GetDevicesList(ctx *gin.Context) {
 	response.ResponsePaginatior(ctx, responseData)
 }
 
+func CreateParameter(ctx *gin.Context) {
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, err := getCPEFromContext(ctx, cperepository)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	}
+
+	parameter := parameterBaseRequest(ctx)
+
+	_, err = cperepository.CreateParameter(cpeModel, parameter)
+
+	if err != nil {
+		response.Response500(ctx, "Cannot save parameter", "")
+	}
+
+	response.ResponseData(ctx, "")
+
+}
+
 func UpdateParameter(ctx *gin.Context) {
 	cperepository := mysql.NewCPERepository(repository.GetConnection())
 	cpeModel, err := getCPEFromContext(ctx, cperepository)
@@ -131,21 +151,37 @@ func UpdateParameter(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
-	var parameterRequest ParameterRequest
-	if err := ctx.ShouldBind(&parameterRequest); err != nil {
-		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	}
-
-	_, err = cperepository.UpdateParameter(cpeModel, types.ParameterValueStruct{
-		Name:  parameterRequest.Name,
-		Value: parameterRequest.Value,
-	})
+	parameter := parameterBaseRequest(ctx)
+	_, err = cperepository.UpdateParameter(cpeModel, parameter)
 
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	}
 
 	ctx.JSON(204, "")
+}
+
+func parameterBaseRequest(ctx *gin.Context) types.ParameterValueStruct {
+	var parameterRequest ParameterRequest
+	_ = ctx.ShouldBind(&parameterRequest)
+
+	validator := request.NewApiValidator(ctx, parameterRequest)
+
+	err := validator.Validate()
+
+	if err != nil {
+		response.ResponseValidationErrors(ctx, validator)
+		return types.ParameterValueStruct{}
+	}
+
+	flag, _ := types.FlagFromString(parameterRequest.Flags)
+
+	return types.ParameterValueStruct{
+		Name:  parameterRequest.Name,
+		Value: parameterRequest.Value,
+		Type:  "",
+		Flag:  flag,
+	}
 }
 
 func getCPEFromContext(ctx *gin.Context, cpeRepository mysql.CPERepository) (*cpe.CPE, error) {

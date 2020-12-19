@@ -14,7 +14,7 @@ type Flag struct {
 	Important    bool `json:"important"`     //I
 }
 
-func Parse(flags string) (Flag, error) {
+func FlagFromString(flags string) (Flag, error) {
 	var err error = nil
 
 	var flag = Flag{
@@ -105,7 +105,7 @@ func (flag *Flag) Scan(src interface{}) (err error) {
 	switch src.(type) {
 	case []uint8:
 		src := src.([]byte)
-		*flag, err = Parse(string(src))
+		*flag, err = FlagFromString(string(src))
 	default:
 		err = errors.New("Invalid flag")
 	}
