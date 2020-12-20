@@ -102,7 +102,7 @@ create table tasks
     id int auto_increment
         primary key,
     cpe_uuid varchar(36),
-    event varchar(20),
+    event varchar(50),
     not_before datetime,
     task varchar(80),
     script text default '',

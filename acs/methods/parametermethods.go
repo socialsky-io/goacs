@@ -83,7 +83,7 @@ func (pd *ParameterDecisions) GetParameterValuesResponseParser() {
 
 }
 
-func (pd *ParameterDecisions) SetParameterValuesResponse() {
+func (pd *ParameterDecisions) SetParameterValuesRequest() {
 	//parametersToWrite := pd.CPERequest.Session.CPE.GetParametersWithFlag("W")
 	//log.Println("parametersToWrite")
 	////log.Println(parametersToWrite)

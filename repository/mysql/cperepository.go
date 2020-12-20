@@ -131,7 +131,7 @@ func (r *CPERepository) DeleteDevice(cpe *cpe.CPE) {
 
 	query, args, _ := dialect.Delete("cpe").
 		Prepared(true).
-		Where(goqu.C("cpe_uuid").Eq(cpe.UUID)).
+		Where(goqu.C("uuid").Eq(cpe.UUID)).
 		ToSQL()
 
 	_, err := r.db.Exec(query, args...)
@@ -296,6 +296,26 @@ func (r *CPERepository) UpdateParameter(cpe *cpe.CPE, parameter types.ParameterV
 	}
 
 	return
+}
+
+func (r *CPERepository) DeleteParameter(cpe *cpe.CPE, paramaterName string) (bool, error) {
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.Delete("cpe_parameters").
+		Where(
+			goqu.C("cpe_uuid").Eq(cpe.UUID),
+			goqu.C("name").Eq(paramaterName),
+		).
+		Prepared(true).
+		ToSQL()
+
+	_, err := r.db.Exec(query, args...)
+
+	if err != nil {
+		return false, err
+	}
+
+	return true, nil
 }
 
 func (r *CPERepository) SaveParameters(cpe *cpe.CPE) (bool, error) {

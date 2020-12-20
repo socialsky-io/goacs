@@ -68,7 +68,7 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 
 	case acsxml.SPVResp:
 		paramaterDecisions := methods.ParameterDecisions{ReqRes: &reqRes}
-		paramaterDecisions.SetParameterValuesResponse()
+		paramaterDecisions.SetParameterValuesRequest()
 
 	case acsxml.AddObjResp:
 		log.Println("AddObjResp")
@@ -91,8 +91,8 @@ func CPERequestDecision(request *http.Request, w http.ResponseWriter) {
 		fmt.Println("UNSUPPORTED REQTYPE ", reqType)
 	}
 
-	ProcessSessionJobs(&reqRes)
 	ProcessTasks(&reqRes, reqType)
+	ProcessSessionJobs(&reqRes)
 
 }
 
@@ -101,7 +101,7 @@ func ProcessSessionJobs(reqRes *acshttp.CPERequest) {
 	switch reqRes.Session.NextJob {
 	case acs.JOB_SENDPARAMETERS:
 		parameterDecisions := methods.ParameterDecisions{ReqRes: reqRes}
-		parameterDecisions.SetParameterValuesResponse()
+		parameterDecisions.SetParameterValuesRequest()
 		reqRes.Session.NextJob = acs.JOB_NONE
 
 	case acs.JOB_GETPARAMETERNAMES:
@@ -126,12 +126,21 @@ func ProcessTasks(reqRes *acshttp.CPERequest, event string) {
 	tasksRepository := mysql.NewTasksRepository(reqRes.DBConnection)
 	cpeTasks := tasksRepository.GetTasksForCPE(reqRes.Session.CPE.UUID)
 
+	if reqRes.Session.IsNewInACS == true {
+		tasksForNewDevices := tasksRepository.GetTasksForCPE("new")
+		log.Println(tasksForNewDevices)
+		cpeTasks = append(cpeTasks, tasksForNewDevices...)
+	}
+
 	if len(cpeTasks) > 0 {
 		scriptEngine := scripts.NewScriptEngine(reqRes)
 		filteredTasks := tasks.FilterTasksByEvent(event, cpeTasks)
 		for _, cpeTask := range filteredTasks {
-			if cpeTask.Task == tasks.RunScript {
+			switch cpeTask.Task {
+			case tasks.RunScript:
 				_, _ = scriptEngine.Execute(cpeTask.Script)
+			case tasks.SendParameters:
+				scriptEngine.SendParameters()
 			}
 
 			if cpeTask.Infinite == false {

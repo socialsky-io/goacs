@@ -263,7 +263,7 @@ func (envelope *Envelope) SetParameterValues(info []ParameterValueStruct) string
 		request += "<ParameterValueStruct>\n"
 		request += `<Name>` + parameter.Name + `</Name>`
 		request += "\n"
-		request += `<Value>` + parameter.Value + `</Value>`
+		request += `<Value xsi:type="xsd:string">` + parameter.Value + `</Value>`
 		request += "\n"
 		request += "</ParameterValueStruct>\n"
 	}

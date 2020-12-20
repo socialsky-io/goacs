@@ -67,6 +67,22 @@ func (r *TemplateRepository) List(request repository.PaginatorRequest) ([]templa
 	return templates, total
 }
 
+func (r *TemplateRepository) CreateTemplate(template *templates.Template) {
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.Insert("templates").Prepared(true).
+		Cols("name").
+		Vals(goqu.Vals{
+			template.Name,
+		}).ToSQL()
+
+	_, err := r.db.Exec(query, args...)
+
+	if err != nil {
+		log.Println("error CreateTemplate ", err.Error())
+	}
+}
+
 func (r *TemplateRepository) GetParametersForTemplate(template_id int64) ([]templates.TemplateParameter, error) {
 	var parameters = []templates.TemplateParameter{}
 

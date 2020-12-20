@@ -15,9 +15,13 @@ import (
 )
 
 type ParameterRequest struct {
-	Name  string `json:"name" validate:"required"`
-	Value string `json:"value" validate:"required"`
-	Flags string `json:"flags" validate:"required"`
+	Name  string     `json:"name" validate:"required"`
+	Value string     `json:"value"`
+	Flag  types.Flag `json:"flag" validate:"required"`
+}
+
+type DeleteParameterRequest struct {
+	Name string `json:"name" validate:"required"`
 }
 
 type AddObjectRequest struct {
@@ -161,6 +165,31 @@ func UpdateParameter(ctx *gin.Context) {
 	ctx.JSON(204, "")
 }
 
+func DeleteParameter(ctx *gin.Context) {
+	cperepository := mysql.NewCPERepository(repository.GetConnection())
+	cpeModel, _ := getCPEFromContext(ctx, cperepository)
+
+	var parameterRequest DeleteParameterRequest
+	_ = ctx.ShouldBind(&parameterRequest)
+
+	validator := request.NewApiValidator(ctx, parameterRequest)
+
+	err := validator.Validate()
+
+	if err != nil {
+		response.ResponseValidationErrors(ctx, validator)
+		return
+	}
+
+	_, err = cperepository.DeleteParameter(cpeModel, parameterRequest.Name)
+
+	if err != nil {
+		response.Response500(ctx, err.Error(), "")
+	}
+
+	response.ResponseData(ctx, "")
+}
+
 func parameterBaseRequest(ctx *gin.Context) types.ParameterValueStruct {
 	var parameterRequest ParameterRequest
 	_ = ctx.ShouldBind(&parameterRequest)
@@ -174,13 +203,16 @@ func parameterBaseRequest(ctx *gin.Context) types.ParameterValueStruct {
 		return types.ParameterValueStruct{}
 	}
 
-	flag, _ := types.FlagFromString(parameterRequest.Flags)
+	//set Send as default if no system flag
+	if parameterRequest.Flag.System == false {
+		parameterRequest.Flag.Send = true //if user changed value, then need to send it, true?
+	}
 
 	return types.ParameterValueStruct{
 		Name:  parameterRequest.Name,
 		Value: parameterRequest.Value,
 		Type:  "",
-		Flag:  flag,
+		Flag:  parameterRequest.Flag,
 	}
 }
 
@@ -188,7 +220,7 @@ func getCPEFromContext(ctx *gin.Context, cpeRepository mysql.CPERepository) (*cp
 	cpeModel, err := cpeRepository.Find(ctx.Param("uuid"))
 
 	if err != nil {
-		ctx.AbortWithError(404, err)
+		response.ResponseError(ctx, 404, err.Error(), "")
 		return nil, err
 	}
 
@@ -243,6 +275,10 @@ func GetDeviceQueuedTasks(ctx *gin.Context) {
 	tasks := taskRepository.GetTasksForCPE(cpeModel.UUID)
 
 	response.ResponseData(ctx, tasks)
+}
+
+func AddDeviceTask(ctx *gin.Context) {
+
 }
 
 func AddObject(ctx *gin.Context) {

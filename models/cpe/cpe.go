@@ -74,6 +74,7 @@ func (cpe *CPE) AddParameter(parameter types.ParameterValueStruct) {
 
 	for index := range cpe.ParameterValues {
 		if cpe.ParameterValues[index].Name == parameter.Name {
+			log.Println("Replacing parameter ", parameter.Name)
 			//Replace exist parameter
 			cpe.ParameterValues[index].Value = parameter.Value
 			cpe.ParameterValues[index].Flag = parameter.Flag

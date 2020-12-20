@@ -25,6 +25,7 @@ func NewScriptEngine(reqRes *acshttp.CPERequest) ScriptEngine {
 	}
 
 	_ = scriptEnv.Define("SetParameter", se.SetParameter)
+	_ = scriptEnv.Define("SendParameters", se.SendParameters)
 	_ = scriptEnv.Define("SaveDevice", se.SaveDevice)
 	_ = scriptEnv.Define("AddObject", se.AddObject)
 

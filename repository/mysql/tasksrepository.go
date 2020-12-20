@@ -1,6 +1,7 @@
 package mysql
 
 import (
+	"github.com/doug-martin/goqu/v9"
 	"github.com/jmoiron/sqlx"
 	"goacs/models/tasks"
 	"log"
@@ -15,6 +16,29 @@ func NewTasksRepository(connection *sqlx.DB) TasksRepository {
 	return TasksRepository{
 		db: connection,
 	}
+}
+
+func (t *TasksRepository) AddTaskForCPE(task tasks.Task) {
+	dialect := goqu.Dialect("mysql")
+
+	query, args, _ := dialect.Insert("tasks").Prepared(true).
+		Cols("cpe_uuid", "event", "task", "not_before", "script", "infinite", "created_at").
+		Vals(goqu.Vals{
+			task.CpeUuid,
+			task.Event,
+			task.Task,
+			task.NotBefore,
+			task.Script,
+			task.Infinite,
+			task.CreatedAt,
+		}).ToSQL()
+
+	_, err := t.db.Exec(query, args...)
+
+	if err != nil {
+		log.Println("error AddTaskForCPE ", err.Error())
+	}
+
 }
 
 func (t *TasksRepository) GetTasksForCPE(cpe_uuid string) []tasks.Task {

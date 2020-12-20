@@ -7,9 +7,10 @@ import (
 )
 
 const (
-	RunScript string = "RunScript"
-	Provision        = "Provision"
-	Reboot           = "Reboot"
+	RunScript      string = "RunScript"
+	SendParameters        = "SendParameters"
+	Reboot                = "Reboot"
+	UploadFirmware        = "UploadFirmware"
 )
 
 type Task struct {

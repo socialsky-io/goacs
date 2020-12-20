@@ -9,9 +9,10 @@ type Flag struct {
 	Read         bool `json:"read"`          //R
 	Write        bool `json:"write"`         //W
 	AddObject    bool `json:"add_object"`    //A
-	System       bool `json:"system"`        //S
+	System       bool `json:"system"`        //X
 	PeriodicRead bool `json:"periodic_read"` //P
 	Important    bool `json:"important"`     //I
+	Send         bool `json:"send"`          //S
 }
 
 func FlagFromString(flags string) (Flag, error) {
@@ -24,6 +25,7 @@ func FlagFromString(flags string) (Flag, error) {
 		System:       false,
 		PeriodicRead: false,
 		Important:    false,
+		Send:         false,
 	}
 
 	for _, token := range flags {
@@ -34,12 +36,14 @@ func FlagFromString(flags string) (Flag, error) {
 			flag.Write = true
 		case 'A':
 			flag.AddObject = true
-		case 'S':
+		case 'X':
 			flag.System = true
 		case 'P':
 			flag.PeriodicRead = true
 		case 'I':
 			flag.Important = true
+		case 'S':
+			flag.Send = true
 		default:
 			err = errors.New("Unknown flag " + string(token))
 		}
@@ -61,13 +65,16 @@ func (flag *Flag) AsString() string {
 		stringFlag += "A"
 	}
 	if flag.System == true {
-		stringFlag += "S"
+		stringFlag += "X"
 	}
 	if flag.PeriodicRead == true {
 		stringFlag += "P"
 	}
 	if flag.Important == true {
 		stringFlag += "I"
+	}
+	if flag.Send == true {
+		stringFlag += "S"
 	}
 
 	return stringFlag
@@ -87,13 +94,16 @@ func (flag *Flag) CharToFieldName(char string) string {
 		return "Write"
 	case "A":
 		return "AddObject"
-	case "S":
+	case "X":
 		return "System"
 	case "P":
 		return "PeriodicRead"
 	case "I":
 		return "Important"
+	case "S":
+		return "Send"
 	}
+
 	return "Read"
 }
 

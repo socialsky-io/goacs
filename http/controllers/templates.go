@@ -16,22 +16,49 @@ type TemplateListResponse struct {
 	ParameterCount int64 `json:"parameter_count"`
 }
 
+type TemplateStoreRequest struct {
+	Name string `json:"name" validate:"required"`
+}
+
 type TemplateParameterStoreRequest struct {
-	TemplateId int64  `json:"template_id" validate:"required"`
-	Name       string `json:"name" validate:"required"`
-	Value      string `json:"value"`
+	TemplateId int64      `json:"template_id" validate:"required"`
+	Name       string     `json:"name" validate:"required"`
+	Value      string     `json:"value"`
+	Flag       types.Flag `json:"flag" validate:"required"`
 }
 
 type TemplateParameterUpdateRequest struct {
-	TemplateId    int64  `json:"template_id" validate:"required"`
-	ParameterUUID string `json:"parameter_uuid" validate:"required"`
-	Name          string `json:"name" validate:"required"`
-	Value         string `json:"value"`
+	TemplateId    int64      `json:"template_id" validate:"required"`
+	ParameterUUID string     `json:"parameter_uuid" validate:"required"`
+	Name          string     `json:"name" validate:"required"`
+	Value         string     `json:"value"`
+	Flag          types.Flag `json:"flag" validate:"required"`
 }
 
 type TemplateParameterDeleteRequest struct {
 	TemplateId    int64  `json:"template_id" validate:"required"`
 	ParameterUUID string `json:"parameter_uuid" validate:"required"`
+}
+
+func CreateTemplate(ctx *gin.Context) {
+	var templateStoreRequest TemplateStoreRequest
+	_ = ctx.ShouldBindJSON(&templateStoreRequest)
+
+	validator := request.NewApiValidator(ctx, templateStoreRequest)
+
+	err := validator.Validate()
+
+	if err != nil {
+		response.ResponseValidationErrors(ctx, validator)
+		return
+	}
+
+	templatesrepository := mysql.NewTemplateRepository(repository.GetConnection())
+	templatesrepository.CreateTemplate(&templates.Template{
+		Name: templateStoreRequest.Name,
+	})
+
+	response.ResponseData(ctx, "")
 }
 
 func GetTemplatesList(ctx *gin.Context) {
@@ -113,7 +140,7 @@ func UpdateTemplateParameter(ctx *gin.Context) {
 			Name:  templatePURequest.Name,
 			Value: templatePURequest.Value,
 			Type:  "",
-			Flag:  types.Flag{},
+			Flag:  templatePURequest.Flag,
 		},
 	)
 
@@ -148,10 +175,7 @@ func StoreTemplateParameter(ctx *gin.Context) {
 			Name:  templatePSRequest.Name,
 			Value: templatePSRequest.Value,
 			Type:  "",
-			Flag: types.Flag{
-				Read:  true,
-				Write: true,
-			},
+			Flag:  templatePSRequest.Flag,
 		},
 	)
 
